@@ -19,7 +19,7 @@
 <g id="prop" fill="none" stroke="#523523" stroke-width="5" stroke-linejoin="round"><ellipse cx="15" cy="346" rx="30" ry="4" fill="#231d19" opacity=".45" stroke="none"/><path d="M0 342l2 -52q13 5 28 0l1 53 M1 320h30 m-30 1 10 7 30 -1 -11 -7 M12 328l-2 20m31 -21 -2 20 M7 296h17v17H7z"/></g>
 <g id="a"><ellipse rx="19" ry="3" fill="#171612" opacity=".68"/><g id="bodyPose" stroke-linejoin="round"><path d="M-9 -18l-4 17 -7 1 2 2h11l8 -18 M5 -16l4 15 10 1 1 -3 -6 -1 -1 -17" fill="#302724"/><path d="M-7 -55l14 -1 8 13 7 31q-20 5 -42 -1l10 -33z" fill="url(#robe)" stroke="#442e25" stroke-width="2"/><path d="M-6 -53l8 13 6 -13 M-14 -18q15 5 32 0" fill="none" stroke="#e2bc85" stroke-width="2"/><path d="M-10 -48l-12 20 10 3 14 -14 M8 -46l13 13 10 -8 4 6 -15 15 -17 -14" fill="#995b43" stroke="#5e3a2c" stroke-width="2"/><path d="M-8 -67q1 -13 15 -8l5 9 4 4 -4 2q-1 9 -13 6z" fill="#e6bc89"/><path d="M-11 -62q-8 -17 5 -22 15 -3 20 12l-12 -4 -5 9z" fill="#292724"/><circle cx="-11" cy="-80" r="6" fill="#282522"/><path d="M-21 -76l23 -7" stroke="#cb8761" stroke-width="2"/></g></g>
 </g></svg>
-<canvas id="stage3d" aria-label="三维戏台"></canvas><div class="hud"><span id="chapter"></span><span id="role"></span></div><div class="dialog" aria-live="polite"><strong id="speaker"></strong><p id="dialog"></p></div><div class="overlay" id="overlay"><div class="panel"><div class="kicker">北京文脉 · 光影奇遇</div><h2>借一束光<br>走一段未完的戏</h2><p>旧戏台熄了灯。阿照与皮影小生拾影相遇，他们需要借助彼此的视角，找回散落的影子。</p><button class="primary" id="start">进入戏台</button><p class="hint">自动保存在当前设备的浏览器中</p></div></div></section><div class="controls"><button id="left">向左</button><button id="right">向右</button><button class="primary" id="action">互动</button><button id="switch">切换角色</button><button id="voice" aria-pressed="false">念白：关</button><button id="hint">提示</button><button id="reset">重新开始</button></div><section class="tools" id="tools" hidden><strong id="toolTitle"></strong><label id="chairLabel">移动椅子 <input id="chair" type="range" min="0" max="100" value="25"><output id="chairOut"></output></label><label id="lampLabel">调整灯光 <input id="lamp" type="range" min="0" max="100" value="25"><output id="lampOut"></output></label><label id="angleLabel">转动视角 <input id="angle" type="range" min="0" max="100" value="15"><output id="angleOut"></output></label><div class="hint" id="feedback"></div></section><p class="hint">左右拖动画面环视戏台。电脑用方向键移动、空格互动、Q 切换角色；手机长按方向按钮移动。</p></main><script src="stage.js"></script><script>
+<canvas id="stage3d" aria-label="三维戏台"></canvas><div class="hud"><span id="chapter"></span><span id="role"></span></div><div class="dialog" aria-live="polite"><strong id="speaker"></strong><p id="dialog"></p></div><div class="overlay" id="overlay"><div class="panel"><div class="kicker">北京文脉 · 光影奇遇</div><h2>借一束光<br>走一段未完的戏</h2><p>旧戏台熄了灯。阿照与皮影小生拾影相遇，他们需要借助彼此的视角，找回散落的影子。</p><button class="primary" id="start">进入戏台</button><p class="hint">自动保存在当前设备的浏览器中</p></div></div></section><div class="controls"><button id="left">向左</button><button id="right">向右</button><button class="primary" id="action">互动</button><button id="switch">切换角色</button><button id="hint">提示</button><button id="reset">重新开始</button></div><section class="tools" id="tools" hidden><strong id="toolTitle"></strong><label id="chairLabel">移动椅子 <input id="chair" type="range" min="0" max="100" value="25"><output id="chairOut"></output></label><label id="lampLabel">调整灯光 <input id="lamp" type="range" min="0" max="100" value="25"><output id="lampOut"></output></label><label id="angleLabel">转动视角 <input id="angle" type="range" min="0" max="100" value="15"><output id="angleOut"></output></label><div class="hint" id="feedback"></div></section><p class="hint">左右拖动画面环视戏台。电脑用方向键移动、空格互动、Q 切换角色；手机长按方向按钮移动。</p></main><script src="stage.js"></script><script>
 'use strict';
 const el=id=>document.getElementById(id);
 const key='dengxia-shadow-v2';
@@ -40,7 +40,7 @@ function restore(){
   } catch {}
   return state;
 }
-let s=restore(),playing=false,voice=false,held=0,pressed=new Set(),last=0,redrawUntil=0;
+let s=restore(),playing=false,held=0,pressed=new Set(),last=0,redrawUntil=0;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const visual={look:0,started:false,a:s.a,b:s.b,lo:0,hi:0,dir:{a:1,b:1},stride:{a:0,b:0}};
 const wx=n=>(n-50)*.162;
@@ -56,7 +56,6 @@ const scenes=['胡同初遇','借影搭桥','踏影过桥','窗棂寻纹','点�
 const lines=['旧灯还在。让我试试灯芯。','我缺了一截袖子。你看，椅背的影子正好像一座桥。','阿照，稳住灯。我去够那只铜铃。','右边这半截袖子回来了。左边的窗棂里，还有一片戏纹。','这一次，你起身段，我来跟灯。'];
 const tips=['走到左侧灯架附近，以阿照互动。','移动椅子让桥头对齐，再调灯让桥尾搭上右岸。对齐后按互动固定影桥。','切换拾影，沿影桥走到右岸，在铜铃旁互动。','用阿照转动视角接通两岸，再切换拾影走到左岸，用长袖拉铃。','演出完成，可以在此自由回看戏台。'];
 function save(){try{localStorage.setItem(key,JSON.stringify(s))}catch{}}
-function speak(line){if(!voice||!window.speechSynthesis)return;speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(line);utterance.lang='zh-CN';utterance.rate=.92;speechSynthesis.speak(utterance)}
 function render(note){
   const [lo,hi]=ends();visual.lo=wx(lo);visual.hi=wx(hi);
   const svgX=n=>n*10;
@@ -92,7 +91,7 @@ function step(dir,amount){
   if(old!==pos){el(who).setAttribute('transform','translate('+pos*10+' '+(who==='a'?389:265)+')');redrawUntil=performance.now()+2400}
   else if(who==='b')el('dialog').textContent='前面的影路还断着。让阿照看看两端。';
 }
-function changeStage(n){s.stage=n;render();save();speak(lines[n])}
+function changeStage(n){s.stage=n;render();save()}
 function swap(){if(!playing||!s.stage||s.stage===4)return;s.role=s.role==='a'?'b':'a';render();save()}
 function action(){
   if(!playing)return;
@@ -111,10 +110,9 @@ function endCard(){
   el('start').textContent='回看戏台';playing=false;window.setTimeout(()=>{if(s.stage===4&&!playing)curtain(true)},reduced?0:1100);
 }
 const card=el('overlay').querySelector('h2').innerHTML,prologue=el('overlay').querySelector('.panel p').textContent;
-el('start').onclick=()=>{playing=true;visual.started=true;curtain(false);render();speak(lines[s.stage]);el('action').focus({preventScroll:true})};
+el('start').onclick=()=>{playing=true;visual.started=true;curtain(false);render();el('action').focus({preventScroll:true})};
 if(s.stage===4)endCard();else if(s.stage)el('start').textContent='继续上回';
 el('action').onclick=action;el('switch').onclick=swap;el('hint').onclick=()=>{if(playing)render(tips[s.stage])};
-el('voice').onclick=()=>{if(!window.speechSynthesis){render('这台设备暂不支持语音，所有对白均有字幕。');return}voice=!voice;el('voice').textContent='念白：'+(voice?'开':'关');el('voice').setAttribute('aria-pressed',String(voice));if(voice)speak(lines[s.stage]);else speechSynthesis.cancel()};
 el('reset').onclick=()=>{if(!confirm('从胡同初遇重新开始？当前存档会被替换。'))return;s=initial();playing=false;visual.started=false;visual.look=0;visual.a=s.a;visual.b=s.b;el('overlay').querySelector('h2').innerHTML=card;el('overlay').querySelector('.panel p').textContent=prologue;el('start').textContent='进入戏台';curtain(true);render();save()};
 for(const k of ['chair','lamp','angle'])el(k).oninput=e=>{
   if(!playing||s.role!=='a')return;
