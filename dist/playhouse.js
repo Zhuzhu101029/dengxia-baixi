@@ -1,0 +1,85 @@
+const acts=[
+  ['序幕','后台掌灯','按下灯芯，让火光穿过影窗。'],
+  ['第一折','后台置景','拖动椅轨和灯座，让影桥两端同时对准桥墩，再扣锁栓。'],
+  ['第二折','雨桥听铃','换拾影，向右走到桥头，拉响铜铃。'],
+  ['第三折','戏楼寻纹','阿照转窗接通断桥，拾影回左岸牵袖拉铃。'],
+  ['终幕','满堂灯火','阿照举灯，拾影登台。']
+];
+const plates=['scene0.jpg','scene0.jpg','scene1.jpg','scene2.jpg','scene2.jpg'];
+let wide=false,previousPlate='',lastAct=-1,stepDistance=0,muted=false;
+try{muted=localStorage.getItem('dengxia-muted')==='1'}catch{}
+const stageNode=document.querySelector('.stage');
+function displaySound(){
+  stageSound.setMuted(muted);el('sound').textContent=muted?'声音关':'声音开';
+  el('sound').setAttribute('aria-pressed',String(!muted));
+}
+displaySound();
+el('sound').onclick=()=>{
+  muted=!muted;stageSound.unlock();displaySound();
+  if(!muted)stageSound.play('tick');
+  try{localStorage.setItem('dengxia-muted',muted?'1':'0')}catch{}
+};
+function adjustProp(k,v){
+  if(!playing||s.role!=='a'){render('此处需要阿照掌灯，先切换角色。');return}
+  if((s.stage===1&&!['chair','lamp'].includes(k))||(s.stage===3&&k!=='angle')||![1,3].includes(s.stage))return;
+  if(s.stage===3&&s.b>31&&s.b<69){render('等拾影走到岸边，才能转动窗棂。');return}
+  const value=Math.max(0,Math.min(100,Math.round(v)));
+  if(!Number.isFinite(value)||s[k]===value)return;
+  const aligned=isAligned();s[k]=value;
+  stageSound.play(!aligned&&isAligned()?'tick':k==='angle'?'turn':'slide');
+  render();save();
+}
+function objectAction(){
+  if(!playing)return;
+  if(s.stage===0&&s.a<=28)stageSound.play('lamp');
+  if(s.role==='b'&&((s.stage===2&&s.b>=70)||(s.stage===3&&s.b<=29&&isAligned())))stageSound.play('bell');
+  action();
+}
+const mechanism=window.makeMechanism(el('object'),{onMove:adjustProp,onAction:objectAction,onSound:name=>stageSound.play(name)});
+el('action').onclick=objectAction;
+function syncTraveller(){
+  const track=el('crossing');
+  const show=playing&&!wide&&(s.stage===2||s.stage===3)&&s.role==='b';
+  track.hidden=!show;
+  if(show){
+    track.style.setProperty('--facing',visual.dir.b);track.style.setProperty('--position',((s.b-21)/55*94+3)+'%');
+    track.style.setProperty('--target',s.stage===2?'92%':'8%');
+    track.classList.toggle('broken',s.stage===3&&!isAligned());
+  }
+}
+function trackSteps(who,distance){
+  stepDistance+=distance;
+  if(stepDistance>3.8){stageSound.play('step');stepDistance=0}
+  syncTraveller();
+}
+function syncImmersion(){
+  const act=acts[s.stage];
+  el('actNumber').textContent=act[0];el('place').textContent=act[1];
+  const plate=plates[s.stage];
+  if(plate!==previousPlate){el('backdrop').style.backgroundImage='url('+plate+')';stageNode.style.setProperty('--plate','url('+plate+')');previousPlate=plate}
+  if(lastAct!==s.stage){stageSound.scene(s.stage);lastAct=s.stage}
+  stageNode.dataset.act=String(s.stage);
+  stageNode.classList.toggle('wide',wide);
+  stageNode.classList.toggle('in-play',playing);
+  el('view').textContent=wide?'机关特写':'戏台全景';
+  el('view').disabled=!playing;
+  el('switch').textContent=s.role==='a'?'换拾影':'换阿照';
+  el('action').textContent=['点灯','固定影桥','拉响铜铃','牵袖拉铃','谢幕'][s.stage];
+  el('guide').textContent=wide?'左右拖动画面环视。方向键移动，空格互动，Q 换角色。':act[2]+'　方向键移动，Q 换角色。';
+  el('drawer').style.display=wide?'':'none';
+  el('action').disabled=!playing||s.stage===4;
+  el('left').disabled=el('right').disabled=!playing||s.stage===4;
+  el('hint').disabled=!playing;
+  const projection=el('projection');
+  projection.hidden=!playing||![1,3].includes(s.stage);
+  if(!projection.hidden){
+    const [lo,hi]=ends();
+    projection.style.setProperty('--left',lo+'%');projection.style.setProperty('--right',(100-hi)+'%');
+    projection.classList.toggle('aligned',isAligned());
+  }
+  mechanism.update(s.stage,s,playing&&!wide);
+  syncTraveller();
+}
+el('view').onclick=()=>{wide=!wide;stageSound.play('open');render()};
+
+

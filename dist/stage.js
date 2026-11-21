@@ -140,6 +140,9 @@ function theatre(canvas) {
     }
   }
   const wx=n=>(n-50)*.162;
+  const apprentice=document.getElementById('apprentice');
+  const actorFrames=['azhao0.png','azhao1.png'];
+  for(const url of actorFrames){const image=new Image();image.src=url}
   let staticGeometry, warmth, bridgeReveal, bellSide, finalPose=0;
   return function draw(s,visual,t,dt){
     const w=Math.max(2,Math.round(canvas.clientWidth*Math.min(devicePixelRatio||1,gl?1.6:1.1))),h=Math.round(w*.45);
@@ -216,8 +219,21 @@ function theatre(canvas) {
       const a=j*Math.PI/6,b=(j+1)*Math.PI/6;
       tri(point(0,0,0),point(.27*Math.cos(b),0,.12*Math.sin(b)),point(.27*Math.cos(a),0,.12*Math.sin(a)),'40352d');
     }
+    if(k==='a'){
+      const base=sub([x,y,zp],eye),top=sub([x,y+1.81,zp],eye);
+      const screenY=v=>.5-1.25*dot(v,up)/dot(v,forward);
+      const floor=screenY(base);
+      apprentice.style.left=(50+125*h/w*dot(base,right)/dot(base,forward))+'%';
+      apprentice.style.top=(floor*canvas.clientHeight)+'px';
+      apprentice.style.height=(Math.max(.03,floor-screenY(top))*canvas.clientHeight)+'px';
+      apprentice.style.transform='translate(-50%,-100%) scaleX('+visual.dir.a+')';
+      const frame=visual.motion.a.weight>.18?Math.abs(Math.floor(visual.motion.a.phase/Math.PI))%2:0;
+      if(apprentice.getAttribute('src')!==actorFrames[frame])apprentice.src=actorFrames[frame];
+      origin=[0,0,0];yaw=0;continue;
+    }
     actor(x,y+.014,zp,k==='b',visual.motion[k],visual.motion[k].yaw,t,s.stage>=3,finalPose)}
     if(!gl){paint(eye,right,up,forward,light,brightness,w,h);return}
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,data.length/9);
   }
 }
+
