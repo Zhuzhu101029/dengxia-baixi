@@ -28,10 +28,11 @@ function adjustProp(k,v){
   const aligned=isAligned();s[k]=value;
   stageSound.play(!aligned&&isAligned()?'tick':k==='angle'?'turn':'slide');
   render();save();
+  if(k==='chair')showCarry(value);
 }
 function objectAction(){
-  if(!playing)return;
-  if(s.stage===0&&s.a<=28)stageSound.play('lamp');
+  if(!playing||sceneBusy())return;
+  if(s.stage===0&&s.a<=28){lightWick();return}
   if(s.role==='b'&&((s.stage===2&&s.b>=70)||(s.stage===3&&s.b<=29&&isAligned())))stageSound.play('bell');
   action();
 }
@@ -49,6 +50,7 @@ function syncTraveller(){
 }
 function syncImmersion(){
   const act=acts[s.stage];
+  el('portrait').disabled=!playing;el('carry').hidden=!playing||s.stage!==1||s.role!=='a';
   el('actNumber').textContent=act[0];el('place').textContent=act[1];
   const plate=plates[s.stage];
   if(plate!==previousPlate){el('backdrop').style.backgroundImage='url('+plate+')';stageNode.style.setProperty('--plate','url('+plate+')');previousPlate=plate}

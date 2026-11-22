@@ -25,11 +25,11 @@
     const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
     let targetYaw=rotation,zoom=1,targetZoom=1,drawer=0,drawerOpen=false,lastDraw=0;
     const clues=[
-      '灯座的铜钮连着灯芯，轻按即可点火。',
-      '匣底刻着两行小字：椅六十五，灯五十五。',
-      '铜铃悬在东岸。拾影需走到桥头，才能够着铃绳。',
-      '匣底窗纹七十刻相合，长袖须从西岸牵铃。',
-      '末场灯印齐全，这一出戏可以开锣了。'
+      '铜钮边上有个沾油的指印。阿照拿自己的拇指一比，小了一圈。',
+      '椅六十五，灯五十五。底下还有半行铅笔字，写到“等我”就断了。',
+      '铃绳垂在东岸。绳结底下还在滴水，像刚让人攥过。',
+      '七十刻。旁边压着根红线，一头毛了，另一头打着双结。',
+      '匣底积灰里，有人刚写了个“散”字。最后一笔还缺着。'
     ];
     const drawerDepth=()=>[2.16,2.72,1.78,1.88,2.16][stage]||2;
     function rearDrawer(){
@@ -104,6 +104,18 @@
       block(x,y+.035,z,r*1.1,.008,r*.17,iron,.001);
     }
     function base(w,d){
+      // The joinery and four feet form a continuous load path to the floor.
+      const span=w+.70,depth=d+.88;
+      for(let i=0;i<5;i++)block(0,-.12,(i-2)*depth/5,span,.16,depth/5-.006,i%2?[85,59,43]:[94,66,48],.027,true);
+      for(const side of [-1,1]){
+        block(0,-.28,side*(depth/2-.18),span-.20,.17,.13,wood,.025,true);
+        for(const end of [-1,1]){
+          const x=end*(span/2-.26),z=side*(depth/2-.23);
+          block(x,-.59,z,.19,.47,.19,wood,.024,true);
+          block(x,-.635,z,.25,.08,.24,brass,.015);
+          block(x,-.69,z,.39,.055,.38,[78,70,58],.012);
+        }
+      }
       for(const a of [-1,1])for(const b of [-1,1])block(a*(w/2-.4),.04,b*(d/2-.32),.58,.21,.45,brass);
       block(0,.18,0,w,.13,d,gold);
       block(0,.28,0,w-.09,.48,d-.08,wood,.09,true);
@@ -133,6 +145,7 @@
       block(targetX,1,z-.27,.1,.12,.17,bright);
       // A spring pin sinks flush into its keeper when the carriage reaches the mark.
       lathe(targetX,z+.33,[[.095,.89,iron],[.095,.99,brass],[.065,seated?1.0:1.13,seated?patina:bright]],12);
+      for(const side of [-1,1])block(x,.995,z+side*.18,.62,.07,.07,brass,.01);
       block(x,1.03,z,.78,.17,.55,brass);
       if(id==='lamp')lantern(x,z,1.18,.45);
       else{
@@ -142,7 +155,7 @@
           block(x+.30*side,1.16,z+.17,.08,.22,.09,c);
         }
         block(x,1.89,z-.17,.75,.22,.10,c,.04,true);
-        block(x,1.62,z-.17,.54,.07,.07,gold);
+        block(x,1.62,z-.17,.66,.07,.07,gold);
       }
       handle(id,id==='lamp'?'灯座':'椅轨',[x,1.55,z],[x,id==='lamp'?1.0:2.42,z+ (id==='lamp'?.4:0)]);
     }
@@ -184,7 +197,13 @@
       if(drag?.id!=='drawer')drawer+=(Number(drawerOpen)-drawer)*k;
       if(!ctx||!width||!height)return;
       ctx.clearRect(0,0,width,height);
-      const ground=project([0,.04,0]);
+      // Painted first because every part of the furniture sits above this plane.
+      for(let j=-2;j<2;j++)for(let i=-3;i<3;i++){
+        const x=i*1.13,z=j*.95, corners=[[x,z],[x+1.12,z],[x+1.12,z+.94],[x,z+.94]];
+        ctx.beginPath();corners.forEach(([a,b],k)=>{const q=project([a,-.692,b]);if(k)ctx.lineTo(q[0],q[1]);else ctx.moveTo(q[0],q[1])});
+        ctx.closePath();ctx.fillStyle=stage===2?((i+j)%2?'#50514ae5':'#565850e5'):((i+j)%2?'#49382de8':'#503c30e8');ctx.fill();
+      }
+      const ground=project([0,-.686,0]);
       ctx.save();ctx.translate(ground[0],ground[1]);ctx.scale(1,.20);
       const rad=scale*(stage===1?3.3:2.4);
       const shade=ctx.createRadialGradient(0,0,0,0,0,rad);shade.addColorStop(0,'#080402ce');shade.addColorStop(1,'#08040200');ctx.fillStyle=shade;ctx.fillRect(-rad,-rad,rad*2,rad*2);ctx.restore();
@@ -208,11 +227,18 @@
           for(const y of [.94,1.09,3.06])block(x,y,0,.42,.10,.42,gold);
         }
         block(0,3.38,0,3.55,.27,.46,lacquer,.06,true);
-        bell(0,0,1.50,1.34);handle('act','拉铃绳',[0,1.1,0],[.68,1.25,.3]);
+        block(0,3.34,0,.22,.12,.24,brass);
+        bell(0,0,1.91,1.07);handle('act','拉铃绳',[0,1.34,0],[.68,1.25,.3]);
       }else if(stage===3){
-        base(4.05,1.88);block(0,.85,-.09,.26,1.55,.3,brass);wheel();
-        bell(1.52,.12,1.27,.47);
-        block(1.52,.86,-.10,.08,1.15,.09,brass);block(1.52,1.95,0,.16,.07,.33,gold);
+        base(4.05,1.88);
+        for(const x of [-.65,.65])block(x,.85,-.33,.14,2.83,.18,wood,.025,true);
+        block(0,2.19,-.32,1.42,.19,.20,wood,.03,true);
+        block(0,2.19,-.16,.19,.20,.40,brass);
+        block(0,3.59,-.33,1.48,.14,.22,wood,.025,true);
+        block(0,3.61,-.15,.19,.075,.46,brass);
+        wheel();
+        bell(1.52,.12,1.44,.47);
+        block(1.52,.86,-.10,.12,1.30,.12,brass);block(1.52,2.08,0,.18,.09,.39,gold);
         handle('angle','转窗棂',[0,2.29,.1],[-.25,1.08,.45]);handle('act','牵袖拉铃',[1.52,1.24,.12],[1.78,1.71,.42]);
       }
       rearDrawer();
