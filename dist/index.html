@@ -27,7 +27,7 @@
 <g id="prop" fill="none" stroke="#523523" stroke-width="5" stroke-linejoin="round"><ellipse cx="15" cy="346" rx="30" ry="4" fill="#231d19" opacity=".45" stroke="none"/><path d="M0 342l2 -52q13 5 28 0l1 53 M1 320h30 m-30 1 10 7 30 -1 -11 -7 M12 328l-2 20m31 -21 -2 20 M7 296h17v17H7z"/></g>
 <g id="a"><ellipse rx="19" ry="3" fill="#171612" opacity=".68"/><g id="bodyPose" stroke-linejoin="round"><path d="M-9 -18l-4 17 -7 1 2 2h11l8 -18 M5 -16l4 15 10 1 1 -3 -6 -1 -1 -17" fill="#302724"/><path d="M-7 -55l14 -1 8 13 7 31q-20 5 -42 -1l10 -33z" fill="url(#robe)" stroke="#442e25" stroke-width="2"/><path d="M-6 -53l8 13 6 -13 M-14 -18q15 5 32 0" fill="none" stroke="#e2bc85" stroke-width="2"/><path d="M-10 -48l-12 20 10 3 14 -14 M8 -46l13 13 10 -8 4 6 -15 15 -17 -14" fill="#995b43" stroke="#5e3a2c" stroke-width="2"/><path d="M-8 -67q1 -13 15 -8l5 9 4 4 -4 2q-1 9 -13 6z" fill="#e6bc89"/><path d="M-11 -62q-8 -17 5 -22 15 -3 20 12l-12 -4 -5 9z" fill="#292724"/><circle cx="-11" cy="-80" r="6" fill="#282522"/><path d="M-21 -76l23 -7" stroke="#cb8761" stroke-width="2"/></g></g>
 </g></svg>
-<canvas id="stage3d" aria-label="三维戏台"></canvas><img id="apprentice" src="azhao0.png" alt="布衣学徒阿照"><div id="cinema"><div class="backdrop" id="backdrop"></div><div class="vignette"></div><div id="object"></div><div id="crossing" hidden><div class="bank"></div><div class="span"></div><div class="traveller" aria-label="拾影当前位置"><svg viewBox="-40 -78 88 84" aria-hidden="true"><use href="#shadowPose"/></svg></div><div class="destination">铃</div></div></div><div id="shutter" aria-hidden="true"></div><div class="sceneLight" aria-hidden="true"></div><div class="hud"><div class="location"><small id="actNumber"></small><h2 id="place"></h2><span id="chapter"></span></div><span id="role"></span></div><div class="dialog" aria-live="polite"><strong id="speaker"></strong><p id="dialog"></p><div id="projection" hidden aria-label="投影与左右桥墩的对齐情况"><i></i><b></b><em></em></div></div><div class="overlay" id="overlay"><div class="panel"><div class="kicker">北京皮影戏</div><h2>借影搭桥</h2><p>旧戏台熄了灯。阿照与皮影小生拾影相遇，他们需要借助彼此的视角，找回散落的影子。</p><button class="primary" id="start">入戏</button><p class="hint">自动保存在当前设备的浏览器中</p></div></div></section><div class="controls"><button id="left">向左</button><button id="right">向右</button><button class="primary" id="action">互动</button><button id="switch">切换角色</button><button id="hint">提示</button><button id="view">戏台全景</button></div><div class="toolDrawer folded" id="drawer" inert><div class="toolClip"><section class="tools" id="tools"><strong id="toolTitle"></strong><label id="chairLabel">移动椅子 <input id="chair" type="range" min="0" max="100" value="25"><output id="chairOut"></output></label><label id="lampLabel">调整灯光 <input id="lamp" type="range" min="0" max="100" value="25"><output id="lampOut"></output></label><label id="angleLabel">转动视角 <input id="angle" type="range" min="0" max="100" value="15"><output id="angleOut"></output></label><div class="hint" id="feedback"></div></section></div></div><p class="hint guide" id="guide"></p></main><script src="sound.js"></script><script src="mechanism.js"></script><script src="stage.js"></script><script>
+<canvas id="stage3d" aria-label="三维戏台"></canvas><div id="apprentice" role="img" aria-label="布衣学徒阿照"></div><div id="cinema"><div class="backdrop" id="backdrop"></div><div class="vignette"></div><div id="object"></div><div id="crossing" hidden><div class="bank"></div><div class="span"></div><div class="traveller" aria-label="拾影当前位置"><svg viewBox="-40 -78 88 84" aria-hidden="true"><use href="#shadowPose"/></svg></div><div class="destination">铃</div></div></div><div id="shutter" aria-hidden="true"></div><div class="sceneLight" aria-hidden="true"></div><div class="hud"><div class="location"><small id="actNumber"></small><h2 id="place"></h2><span id="chapter"></span></div><span id="role"></span></div><div class="dialog" aria-live="polite"><strong id="speaker"></strong><p id="dialog"></p><div id="projection" hidden aria-label="投影与左右桥墩的对齐情况"><i></i><b></b><em></em></div></div><div class="overlay" id="overlay"><div class="panel"><div class="kicker">北京皮影戏</div><h2>借影搭桥</h2><p>旧戏台熄了灯。阿照与皮影小生拾影相遇，他们需要借助彼此的视角，找回散落的影子。</p><button class="primary" id="start">入戏</button><p class="hint">自动保存在当前设备的浏览器中</p></div></div></section><div class="controls"><button id="left">向左</button><button id="right">向右</button><button class="primary" id="action">互动</button><button id="switch">切换角色</button><button id="hint">提示</button><button id="inspect" hidden>查看匣背</button><button id="view">戏台全景</button></div><div class="toolDrawer folded" id="drawer" inert><div class="toolClip"><section class="tools" id="tools"><strong id="toolTitle"></strong><label id="chairLabel">移动椅子 <input id="chair" type="range" min="0" max="100" value="25"><output id="chairOut"></output></label><label id="lampLabel">调整灯光 <input id="lamp" type="range" min="0" max="100" value="25"><output id="lampOut"></output></label><label id="angleLabel">转动视角 <input id="angle" type="range" min="0" max="100" value="15"><output id="angleOut"></output></label><div class="hint" id="feedback"></div></section></div></div><p class="hint guide" id="guide"></p></main><script src="sound.js"></script><script src="mechanism.js"></script><script src="stage.js"></script><script>
 'use strict';
 const el=id=>document.getElementById(id);
 const key='dengxia-shadow-v2';
@@ -44,13 +44,13 @@ function restore(){
     state.a=Math.max(5,Math.min(88,state.a));
     state.b=Math.max(21,Math.min(76,state.b));
     if(state.stage===1&&state.b>31)state.b=31;
-    if(state.stage===3&&state.b>32&&state.b<68&&Math.abs(state.angle-70)>5)state.b=70;
+    if(state.stage===3&&state.b>31&&state.b<69&&Math.abs(state.angle-70)>5)state.b=state.b<50?31:69;
   } catch {}
   return state;
 }
 let s=restore(),playing=false,held=0,pressed=new Set(),last=0,redrawUntil=0;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-function newMotion(){return {phase:0,weight:0,yaw:.58}}
+function newMotion(){return {phase:0,weight:0,yaw:1.5}}
 const visual={look:0,started:false,a:s.a,b:s.b,lo:0,hi:0,dir:{a:1,b:1},motion:{a:newMotion(),b:newMotion()}};
 const wx=n=>(n-50)*.162;
 function isAligned(){
@@ -113,8 +113,9 @@ function step(dir,amount){
       pos=old<=33?Math.min(pos,31):Math.max(pos,69);
     }
   }else pos=Math.max(5,Math.min(88,pos));
-  s[who]=pos;visual.dir[who]=dir;
-  if(old!==pos){trackSteps(who,Math.abs(pos-old));el(who).setAttribute('transform','translate('+pos*10+' '+(who==='a'?389:265)+')');redrawUntil=performance.now()+2400}
+  s[who]=pos;
+  if(pos!==old)visual.dir[who]=dir;
+  if(old!==pos){if(!wide){wide=true;syncImmersion()}el(who).setAttribute('transform','translate('+pos*10+' '+(who==='a'?389:265)+')');redrawUntil=performance.now()+2400}
   else if(who==='b'&&(s.stage===1||(s.stage===3&&!isAligned())))caption('拾影','前面的影路还断着。让阿照看看两端。');
 }
 function changeStage(n){
@@ -123,9 +124,10 @@ function changeStage(n){
     stage.querySelector('.sceneLight').animate([{opacity:0},{opacity:.63,offset:.34},{opacity:0}],{duration:900,easing:'ease-in-out'});
     el('chapter').animate([{opacity:.15,transform:'translateY(3px)'},{opacity:1,transform:'translateY(0)'}],{duration:620});
   }
-  stageSound.play(n===4?'end':'transition');s.stage=n;el('shutter').animate([{opacity:.96},{opacity:0}],{duration:reduced?0:850});render();save();
+  stopMovement();wide=false;
+  stageSound.play(n===4?'end':'transition');s.stage=n;el('shutter').animate?.([{opacity:.96},{opacity:0}],{duration:reduced?0:850});render();save();
 }
-function swap(){if(!playing||!s.stage||s.stage===4)return;stageSound.play('swap');speed=0;s.role=s.role==='a'?'b':'a';render();save()}
+function swap(){if(!playing||!s.stage||s.stage===4)return;stopMovement();stageSound.play('swap');s.role=s.role==='a'?'b':'a';wide=s.role==='b';render();save()}
 function action(){
   if(!playing)return;
   if(s.stage===0&&s.a<=28)return changeStage(1);
@@ -140,29 +142,42 @@ function curtain(open){el('overlay').classList.toggle('closed',!open);el('overla
 function endCard(){
   el('overlay').querySelector('h2').textContent='灯亮了，戏还未完';
   el('overlay').querySelector('.panel p').textContent='阿照收起灯。脚边却多了一道小影子。胡同尽头，另一盏灯缓缓亮起，一个陌生的小生隔着墙，朝他们招了招手。';
-  el('start').textContent='回看戏台';playing=false;window.setTimeout(()=>{if(s.stage===4&&!playing)curtain(true)},reduced?0:2450);
+  el('start').textContent='回看戏台';playing=false;if(visual.started)render();window.setTimeout(()=>{if(s.stage===4&&!playing)curtain(true)},reduced?0:2450);
 }
 const card=el('overlay').querySelector('h2').innerHTML,prologue=el('overlay').querySelector('.panel p').textContent;
 el('start').onclick=()=>{stageSound.unlock();stageSound.play("open");playing=true;visual.started=true;curtain(false);render();el('action').focus({preventScroll:true})};
 if(s.stage===4)endCard();else if(s.stage)el('start').textContent='继续上回';
 el('action').onclick=action;el('switch').onclick=swap;el('hint').onclick=()=>{if(playing)render(s.stage===1?'椅轨对准 65 刻，灯座对准 55 刻，再扣锁栓。':s.stage===3?'窗棂对准 70 刻，换拾影走回左岸拉铃。':tips[s.stage])};
-el('reset').onclick=()=>{if(!confirm('从后台初遇重新开始？当前存档会被替换。'))return;s=initial();playing=false;visual.started=false;visual.look=0;visual.motion={a:newMotion(),b:newMotion()};visual.a=s.a;visual.b=s.b;el('overlay').querySelector('h2').innerHTML=card;el('overlay').querySelector('.panel p').textContent=prologue;el('start').textContent='入戏';curtain(true);render();save()};
+el('reset').onclick=()=>{if(!confirm('从后台初遇重新开始？当前存档会被替换。'))return;stopMovement();wide=false;visual.dir={a:1,b:1};s=initial();playing=false;visual.started=false;visual.look=0;visual.motion={a:newMotion(),b:newMotion()};visual.a=s.a;visual.b=s.b;el('overlay').querySelector('h2').innerHTML=card;el('overlay').querySelector('.panel p').textContent=prologue;el('start').textContent='入戏';curtain(true);render();save()};
 for(const k of ['chair','lamp','angle'])el(k).oninput=e=>{
   if(!playing||s.role!=='a')return;
   if(s.stage===3&&s.b>31&&s.b<69){render('拾影还在桥上。先让他走到岸边，再转窗棂。');return}
   adjustProp(k,Number(e.target.value));
 };
+let speed=0,tapDistance=0,pointer=null,turnRemaining=0;
+function stopMovement(){
+  held=0;speed=0;turnRemaining=0;tapDistance=0;pointer=null;pressed.clear();
+}
 for(const [id,dir] of [['left',-1],['right',1]]){
   const btn=el(id);btn.style.touchAction='none';
-  btn.onpointerdown=e=>{if(!playing)return;e.preventDefault();btn.setPointerCapture(e.pointerId);held=dir;step(dir,.85)};
-  btn.onlostpointercapture=btn.onpointercancel=btn.onpointerup=()=>{held=0;save()};
-  btn.onclick=e=>{if(!e.detail){step(dir,2);save()}};
+  btn.onpointerdown=e=>{
+    if(!playing||e.button!==0||pointer)return;
+    e.preventDefault();btn.setPointerCapture(e.pointerId);
+    pointer={id:e.pointerId,dir,start:s[s.role]};held=dir;tapDistance=0;
+  };
+  btn.onpointerup=e=>{
+    if(pointer?.id!==e.pointerId)return;
+    const distance=Math.abs(s[s.role]-pointer.start);
+    tapDistance=dir*Math.max(0,1-distance);pointer=null;held=0;
+  };
+  btn.onlostpointercapture=btn.onpointercancel=e=>{if(pointer?.id===e.pointerId)stopMovement()};
+  btn.onclick=e=>{if(!e.detail&&playing)tapDistance=Math.max(-4,Math.min(4,tapDistance+dir*2))};
 }
-function release(){held=0;pressed.clear();save()}
+function release(){stopMovement();last=0;save()}
 window.addEventListener('blur',release);window.addEventListener('pagehide',release);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)release()});
 document.addEventListener('keydown',e=>{
-  if(!playing||e.target.tagName==='INPUT')return;
+  if(!playing||e.ctrlKey||e.altKey||e.metaKey||(e.target.tagName==='INPUT'&&e.key.toLowerCase()!=='q'))return;
   const k=e.key.toLowerCase();
   if(['arrowright','arrowleft','a','d'].includes(k)){e.preventDefault();pressed.add(k)}
   if(k==='q'&&!e.repeat){e.preventDefault();swap()}
@@ -171,8 +186,17 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('keyup',e=>{pressed.delete(e.key.toLowerCase());save()});
 let draw;try{draw=theatre(el('stage3d'))}catch{}
 el('stage3d').closest('.stage').classList.toggle('three',!!draw);
-el('stage3d').addEventListener('webglcontextlost',e=>{e.preventDefault();draw=null;el('stage3d').closest('.stage').classList.remove('three')});
-const stageCanvas=el('stage3d');window.addEventListener('resize',()=>{redrawUntil=performance.now()+1000});
+let stageCanvas=el('stage3d');
+stageCanvas.addEventListener('webglcontextlost',e=>{
+  e.preventDefault();
+  const replacement=stageCanvas.cloneNode(false);
+  for(const handler of ['onpointerdown','onpointermove','onpointerup','onpointercancel','onlostpointercapture'])replacement[handler]=stageCanvas[handler];
+  stageCanvas.replaceWith(replacement);stageCanvas=replacement;drag=null;
+  draw=theatre(stageCanvas,true);
+  stageCanvas.closest('.stage').classList.toggle('three',!!draw);
+  redrawUntil=performance.now()+1500;
+});
+window.addEventListener('resize',()=>{redrawUntil=performance.now()+1000});
 let drag=null;
 stageCanvas.onpointerdown=e=>{
   if(!playing||!draw||drag||e.button!==0)return;
@@ -185,24 +209,52 @@ stageCanvas.onpointermove=e=>{
   redrawUntil=performance.now()+2400;
 };
 stageCanvas.onlostpointercapture=stageCanvas.onpointercancel=stageCanvas.onpointerup=()=>{drag=null};
-let lastSave=0,speed=0,idleFrame=0;
+let lastSave=0,idleFrame=0;
 function tick(time){
-  const dt=Math.min(.25,(time-last)/1000||.016);last=time;
-  const dir=held||Number(pressed.has('d')||pressed.has('arrowright'))-Number(pressed.has('a')||pressed.has('arrowleft'));
-  const targetSpeed=playing?dir*15:0;
-  speed+=(targetSpeed-speed)*(1-Math.exp(-dt*(dir?9:16)));
-  if(Math.abs(speed)>.22){step(Math.sign(speed),dt*Math.abs(speed));if(time-lastSave>500){save();lastSave=time}}
+  const dt=last?Math.min(.05,(time-last)/1000):1/60;last=time;
+  const keyDir=Number(pressed.has('d')||pressed.has('arrowright'))-Number(pressed.has('a')||pressed.has('arrowleft'));
+  if(keyDir||held)tapDistance=0;
+  const dir=held||keyDir||Math.sign(tapDistance);
+  const walkSpeed=s.role==='a'?5.8:8.4;
+  const target=playing&&s.stage<4?dir*walkSpeed:0;
+  const reversing=target*speed<0;
+  const acceleration=(!dir||reversing)?85:43;
+  if(reversing){
+    speed-=Math.sign(speed)*Math.min(Math.abs(speed),acceleration*dt);
+  }else if(dir&&speed===0&&visual.dir[s.role]!==dir){
+    visual.dir[s.role]=dir;turnRemaining=.1;
+    visual.motion[s.role].weight=0;
+    visual.motion[s.role].phase=0;
+    redrawUntil=time+900;
+  }else if(turnRemaining>0){
+    turnRemaining=Math.max(0,turnRemaining-dt);
+  }else{
+    speed+=Math.sign(target-speed)*Math.min(Math.abs(target-speed),acceleration*dt);
+  }
+  if(speed){
+    const amount=tapDistance?Math.min(Math.abs(tapDistance),Math.abs(speed)*dt):Math.abs(speed)*dt;
+    const before=s[s.role];step(Math.sign(speed),amount);
+    if(tapDistance&&speed*tapDistance>0){
+      tapDistance-=Math.sign(tapDistance)*amount;
+      if(Math.abs(tapDistance)<.0001){tapDistance=0;speed=0}
+    }
+    if(before===s[s.role]){speed=0;tapDistance=0}
+    if(time-lastSave>450){save();lastSave=time}
+  }
   if(!document.hidden&&(time<redrawUntil||(playing&&!reduced&&time-idleFrame>110))){
     idleFrame=time;
     for(const k of ['a','b']){
-      const delta=(s[k]-visual[k])*(1-Math.exp(-dt*24)),m=visual.motion[k];
-      visual[k]+=delta;
-      const rate=Math.abs(delta)*.162/Math.max(dt,.001);
-      m.phase+=Math.abs(delta)*.162*Math.PI*2/1.12;
-      m.weight+=(Math.min(1,rate/1.6)-m.weight)*(1-Math.exp(-dt*13));
-      m.yaw+=(visual.dir[k]*(m.weight>.12?1.29:.62)-m.yaw)*(1-Math.exp(-dt*7));
+      const distance=Math.abs(s[k]-visual[k])*.162,m=visual.motion[k];
+      visual[k]=s[k];
+      const cycle=k==='a'?apprenticeCycle:1.12;
+      const before=m.phase;
+      m.phase+=distance*2*Math.PI/cycle;
+      if(Math.floor(before/Math.PI)!==Math.floor(m.phase/Math.PI))stageSound.play('step');
+      const moving=distance>.00001;
+      m.weight+=(Number(moving)-m.weight)*(1-Math.exp(-dt*(moving?22:18)));
+      m.yaw+=(visual.dir[k]*Math.PI*.5-m.yaw)*(1-Math.exp(-dt*14));
     }
-    if(draw&&wide)draw(s,visual,time/1000,reduced?1:dt);
+    if(draw&&wide)draw(s,visual,time/1000,dt);
   }
   requestAnimationFrame(tick);
 }

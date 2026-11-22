@@ -1,6 +1,9 @@
+// The supporting foot travels 138.24 pixels per 320-pixel cell over one cycle.
+const apprenticeHeight=1.81;
+const apprenticeCycle=apprenticeHeight*138.24/320;
 // Perspective stage, lit extruded silhouettes, floor shadows and a travelling camera.
-function theatre(canvas) {
-  const gl = canvas.getContext('webgl', { alpha:true, antialias:true, premultipliedAlpha:false });
+function theatre(canvas,software=false) {
+  const gl = !software && canvas.getContext('webgl', { alpha:true, antialias:true, premultipliedAlpha:false });
   const paper = gl ? null : canvas.getContext('2d');
   if (!gl && !paper) return null;
   let buf, un;
@@ -66,8 +69,12 @@ function theatre(canvas) {
     const breath=.009*Math.sin(t*1.8+(opera?1.2:0)),torso=pelvis+breath;
     const greeting=finale;
     for(const sign of [-1,1]){
-      const swing=phase+(sign<0?Math.PI:0),reach=Math.sin(swing)*weight;
-      const hip=[sign*.112,pelvis,0],ankle=[sign*.12,.102+.15*Math.max(0,Math.cos(swing))*weight,.025+.28*reach];
+      const cycle=(phase/(2*Math.PI)+(sign<0?.5:0))%1;
+      const airborne=cycle>=.5,progress=airborne?(cycle-.5)*2:cycle*2;
+      // On the support half of the cycle the shoe travels backwards at world speed.
+      const reach=(airborne?-1+2*progress*progress*(3-2*progress):1-2*progress)*weight;
+      const lift=airborne?.16*Math.sin(Math.PI*progress)*weight:0;
+      const hip=[sign*.112,pelvis,0],ankle=[sign*.12,.102+lift,.025+.28*reach];
       const dy=ankle[1]-hip[1],dz=ankle[2]-hip[2],d=Math.hypot(dy,dz);
       const bend=Math.sqrt(Math.max(0,.413**2-d*d/4));
       const knee=[sign*.12,(hip[1]+ankle[1])/2+dz*bend/d,(hip[2]+ankle[2])/2-dy*bend/d];
@@ -141,11 +148,11 @@ function theatre(canvas) {
   }
   const wx=n=>(n-50)*.162;
   const apprentice=document.getElementById('apprentice');
-  const actorFrames=['azhao0.png','azhao1.png'];
+  const actorFrames=['azhao-idle.png','azhao-walk.png'];
   for(const url of actorFrames){const image=new Image();image.src=url}
   let staticGeometry, warmth, bridgeReveal, bellSide, finalPose=0;
   return function draw(s,visual,t,dt){
-    const w=Math.max(2,Math.round(canvas.clientWidth*Math.min(devicePixelRatio||1,gl?1.6:1.1))),h=Math.round(w*.45);
+    const w=Math.max(2,Math.round(canvas.clientWidth*Math.min(devicePixelRatio||1,gl?1.6:1.1))),h=Math.max(2,Math.round(canvas.clientHeight*w/Math.max(1,canvas.clientWidth)));
     if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
     if(gl){gl.viewport(0,0,w,h);
     gl.enable(gl.DEPTH_TEST);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);}
@@ -161,7 +168,7 @@ function theatre(canvas) {
     const subject=s.role==='b'?visual.b:visual.a;
     orbit=track(orbit,(s.role==='b'?.115:-.11)+turn+visual.look,0,3.4);
     focus=track(focus,s.role==='b'? .18:0,1,3.8);
-    aim=track(aim,s.stage===4?0:wx(subject)*.31,2,3.6);
+    aim=track(aim,s.stage===4?0:wx(subject)*(w/h<1.25?.92:.38),2,3.6);
     camHeight=track(camHeight,s.stage===4?5.4:s.role==='b'?4.05:4.8,3,3.3);
     camRadius=track(camRadius,s.stage===4?13.8:!visual.started?14.6:lens+(s.role==='b'?-.4:0),4,3.2);
     const eye=[aim+Math.sin(orbit)*camRadius,camHeight,Math.cos(orbit)*camRadius],target=[aim,1.72+focus,0],forward=unit(sub(target,eye)),right=unit(cross(forward,[0,1,0])),up=cross(right,forward);
@@ -220,15 +227,17 @@ function theatre(canvas) {
       tri(point(0,0,0),point(.27*Math.cos(b),0,.12*Math.sin(b)),point(.27*Math.cos(a),0,.12*Math.sin(a)),'40352d');
     }
     if(k==='a'){
-      const base=sub([x,y,zp],eye),top=sub([x,y+1.81,zp],eye);
+      const base=sub([x,y,zp],eye),top=sub([x,y+apprenticeHeight,zp],eye);
       const screenY=v=>.5-1.25*dot(v,up)/dot(v,forward);
       const floor=screenY(base);
       apprentice.style.left=(50+125*h/w*dot(base,right)/dot(base,forward))+'%';
       apprentice.style.top=(floor*canvas.clientHeight)+'px';
       apprentice.style.height=(Math.max(.03,floor-screenY(top))*canvas.clientHeight)+'px';
-      apprentice.style.transform='translate(-50%,-100%) scaleX('+visual.dir.a+')';
-      const frame=visual.motion.a.weight>.18?Math.abs(Math.floor(visual.motion.a.phase/Math.PI))%2:0;
-      if(apprentice.getAttribute('src')!==actorFrames[frame])apprentice.src=actorFrames[frame];
+      const motion=visual.motion.a, walking=motion.weight>.045;
+      const count=16,frame=Math.floor(motion.phase/(2*Math.PI)*count)%count;
+      apprentice.classList.toggle('striding',walking);
+      apprentice.style.transform='translate(-50%,-98.75%) scaleX('+visual.dir.a+')';
+      apprentice.style.backgroundPositionX=walking?(100*frame/(count-1))+'%':'50%';
       origin=[0,0,0];yaw=0;continue;
     }
     actor(x,y+.014,zp,k==='b',visual.motion[k],visual.motion[k].yaw,t,s.stage>=3,finalPose)}

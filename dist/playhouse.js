@@ -6,7 +6,7 @@ const acts=[
   ['终幕','满堂灯火','阿照举灯，拾影登台。']
 ];
 const plates=['scene0.jpg','scene0.jpg','scene1.jpg','scene2.jpg','scene2.jpg'];
-let wide=false,previousPlate='',lastAct=-1,stepDistance=0,muted=false;
+let wide=false,previousPlate='',lastAct=-1,muted=false;
 try{muted=localStorage.getItem('dengxia-muted')==='1'}catch{}
 const stageNode=document.querySelector('.stage');
 function displaySound(){
@@ -35,7 +35,7 @@ function objectAction(){
   if(s.role==='b'&&((s.stage===2&&s.b>=70)||(s.stage===3&&s.b<=29&&isAligned())))stageSound.play('bell');
   action();
 }
-const mechanism=window.makeMechanism(el('object'),{onMove:adjustProp,onAction:objectAction,onSound:name=>stageSound.play(name)});
+const mechanism=window.makeMechanism(el('object'),{onMove:adjustProp,onAction:objectAction,onClue:text=>caption('匣中手记',text),onSound:name=>stageSound.play(name)});
 el('action').onclick=objectAction;
 function syncTraveller(){
   const track=el('crossing');
@@ -47,11 +47,6 @@ function syncTraveller(){
     track.classList.toggle('broken',s.stage===3&&!isAligned());
   }
 }
-function trackSteps(who,distance){
-  stepDistance+=distance;
-  if(stepDistance>3.8){stageSound.play('step');stepDistance=0}
-  syncTraveller();
-}
 function syncImmersion(){
   const act=acts[s.stage];
   el('actNumber').textContent=act[0];el('place').textContent=act[1];
@@ -62,10 +57,10 @@ function syncImmersion(){
   stageNode.classList.toggle('wide',wide);
   stageNode.classList.toggle('in-play',playing);
   el('view').textContent=wide?'机关特写':'戏台全景';
-  el('view').disabled=!playing;
+  el('view').disabled=!playing;el('inspect').hidden=!playing||wide;
   el('switch').textContent=s.role==='a'?'换拾影':'换阿照';
   el('action').textContent=['点灯','固定影桥','拉响铜铃','牵袖拉铃','谢幕'][s.stage];
-  el('guide').textContent=wide?'左右拖动画面环视。方向键移动，空格互动，Q 换角色。':act[2]+'　方向键移动，Q 换角色。';
+  el('guide').textContent=act[2]+(wide?'　可拖动画面环视，或切回机关特写。':'　移动时切至戏台全景。');
   el('drawer').style.display=wide?'':'none';
   el('action').disabled=!playing||s.stage===4;
   el('left').disabled=el('right').disabled=!playing||s.stage===4;
@@ -80,6 +75,8 @@ function syncImmersion(){
   mechanism.update(s.stage,s,playing&&!wide);
   syncTraveller();
 }
-el('view').onclick=()=>{wide=!wide;stageSound.play('open');render()};
+el('view').onclick=()=>{stopMovement();wide=!wide;stageSound.play('open');render()};
 
 
+
+el('inspect').onclick=()=>mechanism.inspectRear();

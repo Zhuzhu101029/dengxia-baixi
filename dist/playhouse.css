@@ -35,3 +35,5 @@ button:enabled:hover{background:#463e30}button:focus-visible{outline-color:#e2b5
 #projection{width:clamp(115px,18vw,230px);height:30px;position:relative;background:linear-gradient(#b99e65,#ead6a0 70%,#c8ac72);margin-left:auto;flex-shrink:0;border:2px solid #85683e;border-radius:2px;box-shadow:inset 0 0 6px #685236}
 #projection i,#projection em{position:absolute;width:2px;height:80%;bottom:0;background:#82603f}#projection i{left:33%}#projection em{left:67%}#projection b{position:absolute;left:var(--left);right:var(--right);top:33%;height:5px;background:#513921}#projection.aligned b{background:#34613d}
 @media(max-width:500px){#projection{width:95px}.dialog{gap:8px}}
+
+#apprentice{aspect-ratio:224/320;background:url(azhao-idle.png) center / 100% 100% no-repeat;transform-origin:center bottom}#apprentice.striding{background-image:url(azhao-walk.png);background-size:1600% 100%}

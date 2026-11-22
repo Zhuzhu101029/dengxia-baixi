@@ -12,7 +12,7 @@
     .prop-hot[role=slider]{cursor:ew-resize}.prop-hot:focus-visible{outline:2px solid #ffdc8f;outline-offset:3px}.prop-hot:active{background:#70502e}
   `;
   document.head.append(style);
-  window.makeMechanism = (host,{onMove,onAction,onSound}) => {
+  window.makeMechanism = (host,{onMove,onAction,onSound,onClue}) => {
     const canvas = document.createElement('canvas');
     canvas.className = 'prop-surface';
     canvas.setAttribute('aria-hidden','true');
@@ -23,10 +23,45 @@
     let press=0, pull=0, actionTimer=null, actionTime=0, role=null;
     let width=1,height=1,scale=1,faces=[],frame=0,swing=0,rotation=-0.27,lookDrag=null;
     const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let targetYaw=rotation,zoom=1,targetZoom=1,drawer=0,drawerOpen=false,lastDraw=0;
+    const clues=[
+      '灯座的铜钮连着灯芯，轻按即可点火。',
+      '匣底刻着两行小字：椅六十五，灯五十五。',
+      '铜铃悬在东岸。拾影需走到桥头，才能够着铃绳。',
+      '匣底窗纹七十刻相合，长袖须从西岸牵铃。',
+      '末场灯印齐全，这一出戏可以开锣了。'
+    ];
+    const drawerDepth=()=>[2.16,2.72,1.78,1.88,2.16][stage]||2;
+    function rearDrawer(){
+      const end=-drawerDepth()/2-.06, z=end-drawer*.84;
+      block(0,.31,(end+z)/2,1.65,.075,Math.max(.12,end-z),iron,.025);
+      if(drawer>.12){
+        block(0,.39,(z+end)/2,1.39,.035,Math.max(.02,(end-z)*.85),gold,.01);
+        for(let i=-2;i<=2;i++)block(i*.22,.43,(z+end)/2,.045,.015,(end-z)*(.32+.12*(2-Math.abs(i))),lacquer,.001);
+      }
+      block(0,.29,z,1.81,.36,.10,wood,.04,true);
+      for(const x of [-.82,.82])block(x,.29,z-.05,.07,.36,.06,gold,.014);
+      block(0,.40,z-.08,.44,.08,.20,bright,.025);
+      if(Math.cos(rotation)<-.40)handle('drawer',drawerOpen?'合上暗格':'拉开暗格',[0,.45,z-.14],[0,.86,z-.24]);
+    }
+    function inspectRear(){
+      if(!playing)return;
+      const toRear=Math.cos(targetYaw)>0;
+      const goal=toRear?Math.PI-.16:-.27;
+      targetYaw+=Math.atan2(Math.sin(goal-targetYaw),Math.cos(goal-targetYaw));
+      targetZoom=toRear?1.18:1;
+      onSound('turn');schedule();
+    }
+    function operateDrawer(){
+      if(!playing||Math.cos(rotation)>=-.4)return;
+      drawerOpen=!drawerOpen;onSound('slide');
+      if(drawerOpen)onClue(clues[stage]);
+      schedule();
+    }
     function project([x,y,z]){
       const co=Math.cos(rotation),si=Math.sin(rotation),side=x*co-z*si,depth=x*si+z*co;
       const h=y-1.55, d=depth*.938+h*.345;
-      const f=scale*14/(14-d);
+      const f=scale*zoom*14/(14-d);
       return [width*.5+side*f,height*.52-(h*.938-depth*.345)*f,d];
     }
     const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
@@ -36,7 +71,9 @@
       const n=cross(sub(vertices[1],vertices[0]),sub(vertices[2],vertices[0]));
       const length=Math.hypot(...n)||1;
       const light=(-.48*n[0]+.77*n[1]+.42*n[2])/length;
-      const shine = grain?0:Math.pow(Math.max(0,(-.3*n[0]+.78*n[1]+.54*n[2])/length),9)*48;
+      const viewDot=(Math.sin(rotation)*n[0]+.36*n[1]+Math.cos(rotation)*n[2])/length;
+      const highlight=Math.max(0,.62*light+.38*viewDot);
+      const shine=grain?0:Math.pow(highlight,10)*82;
       const color='rgb('+pigment.map((v,i)=>Math.min(255,Math.round(v*(.65+.45*light)+shine*(1-i*.22)))).join(',')+')';
       faces.push({dots,depth:dots.reduce((s,p)=>s+p[2],0)/dots.length,color,grain});
     }
@@ -92,7 +129,10 @@
       for(const zz of [-.18,.18])block(0,.96,z+zz,4.85,.055,.05,bright,.01);
       for(let i=0;i<=20;i++)block((i/20-.5)*4.3,1.02,z+.16,.02,.01,i%5===0?.22:.09,ivory,.002);
       const x=(values[id]/100-.5)*4.3;
-      block((target/100-.5)*4.3,1,z-.27,.1,.12,.17,bright);
+      const targetX=(target/100-.5)*4.3, seated=Math.abs(values[id]-target)<=5;
+      block(targetX,1,z-.27,.1,.12,.17,bright);
+      // A spring pin sinks flush into its keeper when the carriage reaches the mark.
+      lathe(targetX,z+.33,[[.095,.89,iron],[.095,.99,brass],[.065,seated?1.0:1.13,seated?patina:bright]],12);
       block(x,1.03,z,.78,.17,.55,brass);
       if(id==='lamp')lantern(x,z,1.18,.45);
       else{
@@ -136,8 +176,12 @@
       }
       face([[-.1,3.65,0],[0,3.48,.04],[.10,3.65,0]],bright);
     }
-    function draw(){
+    function draw(now){
       frame=0;
+      const dt=Math.min(.05,(now-lastDraw)/1000||.016);lastDraw=now;
+      const k=reduced?1:1-Math.exp(-dt*14);
+      rotation+=(targetYaw-rotation)*k;zoom+=(targetZoom-zoom)*k;
+      if(drag?.id!=='drawer')drawer+=(Number(drawerOpen)-drawer)*k;
       if(!ctx||!width||!height)return;
       ctx.clearRect(0,0,width,height);
       const ground=project([0,.04,0]);
@@ -171,6 +215,8 @@
         block(1.52,.86,-.10,.08,1.15,.09,brass);block(1.52,1.95,0,.16,.07,.33,gold);
         handle('angle','转窗棂',[0,2.29,.1],[-.25,1.08,.45]);handle('act','牵袖拉铃',[1.52,1.24,.12],[1.78,1.71,.42]);
       }
+      rearDrawer();
+      if(Math.cos(rotation)<-.4)points=points.filter(point=>point.id==='drawer');
       faces.sort((a,b)=>a.depth-b.depth);
       for(const f of faces){
         const d=f.dots;ctx.beginPath();ctx.moveTo(d[0][0],d[0][1]);for(const p of d.slice(1))ctx.lineTo(p[0],p[1]);ctx.closePath();ctx.fillStyle=f.color;ctx.fill();ctx.strokeStyle=f.color;ctx.lineWidth=.55;ctx.stroke();
@@ -192,6 +238,9 @@
         light.addColorStop(1,'rgba(255,146,40,0)');
         ctx.fillStyle=light;ctx.fillRect(x-r,y-r,2*r,2*r);
       }
+      const inspect=document.getElementById('inspect');
+      inspect.textContent=Math.cos(targetYaw)<0?'查看正面':'查看匣背';
+      if(Math.abs(targetYaw-rotation)>.001||Math.abs(zoom-targetZoom)>.001||Math.abs(Number(drawerOpen)-drawer)>.001)schedule();
       placeControls();if(actionTimer!==null&&!reduced)schedule();
       if(swing>.01){swing=Math.max(0,swing-.032);schedule()}
     }
@@ -224,11 +273,15 @@
       if(!playing||e.button!==0||drag||actionTimer!==null)return;
       e.preventDefault();e.stopPropagation();
       e.currentTarget.setPointerCapture(e.pointerId);
-      drag={id,start:e.clientX,top:e.clientY,value:values[id],pointer:e.pointerId,distance:0};
+      drag={id,start:e.clientX,top:e.clientY,value:id==='drawer'?drawer:values[id],pointer:e.pointerId,distance:0};
       if(id==='act'){press=.55;pull=0;schedule()}
     }
     function move(e){
       if(!drag||e.pointerId!==drag.pointer)return;
+      if(drag.id==='drawer'){
+        drawer=Math.max(0,Math.min(1,drag.value+(e.clientY-drag.top)/Math.max(26,scale*.6)));
+        schedule();return;
+      }
       if(drag.id==='act'){
         const dx=e.clientX-drag.start,dy=e.clientY-drag.top;
         drag.distance=Math.max(drag.distance,Math.hypot(dx,dy));
@@ -240,6 +293,10 @@
     }
     function finish(e){
       if(!drag||e.pointerId!==drag.pointer)return;
+      if(drag.id==='drawer'){const tap=Math.hypot(e.clientX-drag.start,e.clientY-drag.top)<7;
+        move(e);drag=null;
+        if(tap||(drawer>=.5)!==drawerOpen)operateDrawer();else schedule();
+        return}
       if(drag.id!=='act'){drag=null;return}
       move(e);
       const engage=drag.distance<=7||(isBell()&&pull>=.76);
@@ -252,23 +309,23 @@
         let btn=controls.get(id);
         if(!btn){
           btn=document.createElement('button');btn.type='button';btn.className='prop-hot';
-          if(id!=='act'){
+          if(id!=='act'&&id!=='drawer'){
             btn.setAttribute('role','slider');btn.setAttribute('aria-valuemin','0');btn.setAttribute('aria-valuemax','100');
           }
           btn.onpointerdown=e=>start(id,e);btn.onpointermove=move;btn.onpointerup=finish;btn.onpointercancel=abortGesture;
           btn.onkeydown=e=>{
             if(!playing)return;
-            if(id==='act'&&[' ','Enter'].includes(e.key)){e.stopPropagation();e.preventDefault();if(!e.repeat)fire();return}
-            if(id==='act'||!['ArrowLeft','ArrowRight','ArrowDown','ArrowUp','Home','End'].includes(e.key))return;
+            if((id==='act'||id==='drawer')&&[' ','Enter'].includes(e.key)){e.stopPropagation();e.preventDefault();if(!e.repeat){if(id==='drawer')operateDrawer();else fire()}return}
+            if(id==='act'||id==='drawer'||!['ArrowLeft','ArrowRight','ArrowDown','ArrowUp','Home','End'].includes(e.key))return;
             e.stopPropagation();e.preventDefault();
             onMove(id,e.key==='Home'?0:e.key==='End'?100:Math.max(0,Math.min(100,values[id]+(['ArrowLeft','ArrowDown'].includes(e.key)?-1:1)*(e.shiftKey?5:1))));
           };
-          btn.onclick=e=>{if(!e.detail&&id==='act')fire()};
+          btn.onclick=e=>{if(!e.detail){if(id==='act')fire();if(id==='drawer')operateDrawer()}};
           host.append(btn);controls.set(id,btn);
         }
-        btn.hidden=!playing;btn.textContent=id==='act'&&isBell()&&drag?.id==='act'?(pull>=.76?'松手响铃':'向下拉绳'):label+(id==='act'?'':' · '+values[id]);
-        btn.setAttribute('aria-label',id==='act'?label:label+'，左右拖动或用方向键调整');
-        if(id!=='act')btn.setAttribute('aria-valuenow',values[id]);
+        btn.hidden=!playing;btn.textContent=id==='act'&&isBell()&&drag?.id==='act'?(pull>=.76?'松手响铃':'向下拉绳'):label+(id==='act'||id==='drawer'?'':' · '+values[id]);
+        btn.setAttribute('aria-label',id==='act'||id==='drawer'?label:label+'，左右拖动或用方向键调整');
+        if(id!=='act'&&id!=='drawer')btn.setAttribute('aria-valuenow',values[id]);
         const half=(btn.offsetWidth||76)/2;
         btn.style.left=Math.max(half,Math.min(width-half,tag[0]))+'px';
         btn.style.top=Math.max(18,Math.min(height-19,tag[1]))+'px';
@@ -279,23 +336,26 @@
       const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
       const nearest=points.map(p=>[p,Math.hypot(x-p.pt[0],y-p.pt[1])]).sort((a,b)=>a[1]-b[1])[0];
       if(nearest&&nearest[1]<Math.max(22,scale*(stage===3?.75:.66)))start(nearest[0].id,e);
-      else {lookDrag={x:e.clientX,rotation};canvas.setPointerCapture(e.pointerId)}
+      else {lookDrag={x:e.clientX,rotation:targetYaw};canvas.setPointerCapture(e.pointerId)}
     };
     canvas.onpointermove=e=>{
-      if(lookDrag){rotation=Math.max(-.85,Math.min(.7,lookDrag.rotation+(e.clientX-lookDrag.x)*.006));schedule()}
+      if(lookDrag){targetYaw=lookDrag.rotation+(e.clientX-lookDrag.x)*.009;schedule()}
       else move(e);
     };
     canvas.onpointerup=e=>{lookDrag=null;finish(e)};canvas.onpointercancel=abortGesture;
+    window.addEventListener('blur',abortAction);
+    const lostCapture=e=>{if(drag?.pointer===e.pointerId)abortGesture()};
+    host.addEventListener('lostpointercapture',lostCapture);
     const observer=new ResizeObserver(resize);observer.observe(host);
-    return {update(next,state,active){
+    return {inspectRear,update(next,state,active){
       const sig=[next,state.role,state.chair,state.lamp,state.angle,active].join('/');
       if(sig===signature)return;
       signature=sig;
       if(stage!==next||role!==state.role||!active)abortAction();
       role=state.role;
-      if(stage!==next){rotation=-.27;swing=0}
+      if(stage!==next){rotation=targetYaw=-.27;zoom=targetZoom=1;drawer=0;drawerOpen=false;swing=0}
       stage=next;values={chair:state.chair,lamp:state.lamp,angle:state.angle};playing=active;
       scale=Math.min(width/(stage===1?6.5:5.7),height/4.65);schedule();
-    },destroy(){abortAction();observer.disconnect();cancelAnimationFrame(frame);canvas.remove();for(const b of controls.values())b.remove()}};
+    },destroy(){abortAction();window.removeEventListener('blur',abortAction);host.removeEventListener('lostpointercapture',lostCapture);observer.disconnect();cancelAnimationFrame(frame);canvas.remove();for(const b of controls.values())b.remove()}};
   };
 })();
