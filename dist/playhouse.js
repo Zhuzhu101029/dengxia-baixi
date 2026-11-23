@@ -5,7 +5,7 @@ const acts=[
   ['第三折','戏楼寻纹','阿照转窗接通断桥，拾影回左岸牵袖拉铃。'],
   ['终幕','满堂灯火','阿照举灯，拾影登台。']
 ];
-const plates=['scene0.jpg','scene0.jpg','scene1.jpg','scene2.jpg','scene2.jpg'];
+const plates=['room-shop.jpg','room-shop.jpg','room-river.jpg','room-opera.jpg','room-opera.jpg'];
 let wide=false,previousPlate='',lastAct=-1,muted=false;
 try{muted=localStorage.getItem('dengxia-muted')==='1'}catch{}
 const stageNode=document.querySelector('.stage');
@@ -19,13 +19,14 @@ el('sound').onclick=()=>{
   if(!muted)stageSound.play('tick');
   try{localStorage.setItem('dengxia-muted',muted?'1':'0')}catch{}
 };
+let previousChair=s.chair;
 function adjustProp(k,v){
   if(!playing||s.role!=='a'){render('此处需要阿照掌灯，先切换角色。');return}
   if((s.stage===1&&!['chair','lamp'].includes(k))||(s.stage===3&&k!=='angle')||![1,3].includes(s.stage))return;
   if(s.stage===3&&s.b>31&&s.b<69){render('等拾影走到岸边，才能转动窗棂。');return}
   const value=Math.max(0,Math.min(100,Math.round(v)));
   if(!Number.isFinite(value)||s[k]===value)return;
-  const aligned=isAligned();s[k]=value;
+  const aligned=isAligned();if(k==='chair')previousChair=s.chair;s[k]=value;
   stageSound.play(!aligned&&isAligned()?'tick':k==='angle'?'turn':'slide');
   render();save();
   if(k==='chair')showCarry(value);

@@ -7,12 +7,14 @@ function lockStage(locked){
 }
 function closePerformance(){
   clearTimeout(beatTimer);cancelAnimationFrame(beatFrame);
-  visual.work=null;stageNode.classList.remove('working');
+  visual.work=null;visual.shot=null;stageNode.classList.remove('model-shot');redrawUntil=performance.now()+900;
   beat='';el('performance').hidden=true;el('performance').classList.remove('glimpse');
   lockStage(Boolean(s.passage));
 }
 function paintBeat(kind,progress,role){
-  window.performBeat(el('performFrame'),kind,Math.max(0,Math.min(1,progress)),role);
+  if(draw){
+    visual.shot={kind,progress,role};stageNode.classList.add('model-shot');redrawUntil=performance.now()+900;
+  }else window.performBeat(el('performFrame'),kind,Math.max(0,Math.min(1,progress)),role);
 }
 function openBeat(mode){
   closePerformance();stopMovement();beat=mode;
@@ -32,9 +34,13 @@ function inspectFace(role){
 }
 function showCarry(value){
   if(beat!=='chair'){
-    if(beat&&beat!=='glimpse')return;
-    beat='glimpse';el('performance').classList.add('glimpse');el('performance').hidden=false;
-    clearTimeout(beatTimer);beatTimer=setTimeout(closePerformance,1000);
+    // Keep a wide-view drag on the stage, with both hands following the rail.
+    if(!beat&&wide&&draw){
+      if(!visual.work)visual.work={position:previousChair,height:0,moving:0};
+      clearTimeout(beatTimer);const finish=()=>{if(beat)return;if(visual.work&&Math.abs(visual.work.position-s.chair)>.04){beatTimer=setTimeout(finish,160);return}visual.work=null;redrawUntil=performance.now()+900};
+      beatTimer=setTimeout(finish,500);
+    }
+    return;
   }
   el('carryRead').value=value;el('carryRange').value=value;
   paintBeat('chair',value/100,'a');
@@ -86,6 +92,17 @@ gateHandle.onpointermove=e=>{
   moveLatch(gateDrag.base+delta*100);
 };
 gateHandle.onlostpointercapture=gateHandle.onpointerup=gateHandle.onpointercancel=()=>{gateDrag=null};
+// Some touch browsers suppress the compatibility click immediately after a slider drag.
+const enterButton=el('enterGate');
+let gateTap=null;
+enterButton.onpointerdown=e=>{if(e.pointerType==='touch')gateTap={id:e.pointerId,x:e.clientX,y:e.clientY}};
+enterButton.onpointercancel=()=>{gateTap=null};
+enterButton.onpointerup=e=>{
+  const tap=gateTap;gateTap=null;
+  if(tap&&tap.id===e.pointerId&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<9){
+    e.preventDefault();enterButton.click();
+  }
+};
 el('enterGate').onclick=()=>{
   if(!s.passage||s.latch<98)return;
   const next=s.passage;s.passage=0;s.latch=0;el('passage').hidden=true;
@@ -95,7 +112,7 @@ el('portrait').onclick=()=>inspectFace(s.role);
 el('otherFace').onclick=()=>inspectFace(portraitRole==='a'?'b':'a');
 el('carry').onclick=()=>{
   openBeat('chair');
-  if(draw){visual.work={position:s.chair,height:0,moving:0};stageNode.classList.add('working')}
+  if(draw){visual.work={position:s.chair,height:0,moving:0}}
   el('performTitle').textContent='阿照 · 搬椅';
   showCarry(s.chair);el('carryRange').focus({preventScroll:true});
 };

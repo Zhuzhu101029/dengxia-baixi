@@ -28,22 +28,19 @@ button:enabled:hover{background:#463e30}button:focus-visible{outline-color:#e2b5
 .guide{line-height:1.6;margin:6px 0 12px;color:#c2b69e}
 #crossing{position:absolute;bottom:4%;left:18%;right:18%;height:28px;pointer-events:none}#crossing .bank{position:absolute;bottom:0;width:100%;height:3px;background:linear-gradient(90deg,#e1c69a 0 23%,transparent 23% 77%,#e1c69a 77%)}#crossing .span{position:absolute;bottom:0;height:3px;left:23%;right:23%;background:#cba766}#crossing.broken .span{transform:rotate(-5deg);opacity:.5}.traveller,.destination{position:absolute;bottom:5px;font-size:13px;white-space:nowrap;padding:2px 5px;background:#242820e6;transform:translateX(-50%);color:#ffebbf}.traveller{left:var(--position);z-index:1;border-bottom:2px solid #dfac5c}.destination{left:var(--target);bottom:-14px;line-height:13px}
 @media(max-width:650px){header{height:54px}.header-actions{gap:0}.main{padding:0 8px}.scene,#stage3d,#cinema,.sceneLight,.overlay{height:clamp(380px,57svh,560px)}#object{inset:16% 0 3%}.hud{inset:10px 12px auto}.location h2{font-size:22px;margin:4px 0}.hud #chapter{font-size:12px}.controls{gap:5px}.controls button{padding:5px 9px}.controls #view{margin-left:0}.panel{max-width:90%}.overlay{padding:26px}.dialog{align-items:flex-start;min-height:64px}.backdrop{background-position:44% center}#crossing{left:10%;right:10%}}
-#apprentice{position:absolute;display:none;pointer-events:none;width:auto;height:22%;filter:brightness(.86) sepia(.13) drop-shadow(1px 1px 1px #332c24a3)}.stage.wide.three #apprentice{display:block}
-.stage.working.three .scene,.stage.wide.three .scene{background-image:linear-gradient(#18212026,#18212022),var(--plate);background-size:cover}
 @media(max-width:650px){.backdrop{background-position:68% center}}
 .traveller{bottom:2px;padding:0;border:0;background:transparent}.traveller svg{display:block;height:56px;width:60px;filter:drop-shadow(1px 2px 3px #12110c);transform:scaleX(var(--facing,1))}
 #projection{width:clamp(115px,18vw,230px);height:30px;position:relative;background:linear-gradient(#b99e65,#ead6a0 70%,#c8ac72);margin-left:auto;flex-shrink:0;border:2px solid #85683e;border-radius:2px;box-shadow:inset 0 0 6px #685236}
 #projection i,#projection em{position:absolute;width:2px;height:80%;bottom:0;background:#82603f}#projection i{left:33%}#projection em{left:67%}#projection b{position:absolute;left:var(--left);right:var(--right);top:33%;height:5px;background:#513921}#projection.aligned b{background:#34613d}
 @media(max-width:500px){#projection{width:95px}.dialog{gap:8px}}
 
-#apprentice{aspect-ratio:224/320;background:url(azhao-idle.png) center / 100% 100% no-repeat;transform-origin:center bottom}#apprentice.striding{background-image:url(azhao-walk.png);background-size:1600% 100%}
 #performance,#passage{position:absolute;inset:0 0 auto;height:clamp(350px,64vh,760px);z-index:4;overflow:hidden;background:#161410}
 #performance[hidden],#passage[hidden],#performBar [hidden],.controls [hidden]{display:none}
 #performFrame{position:absolute;inset:0}#performBar,.passControls{position:absolute;bottom:0;left:0;right:0;padding:18px clamp(10px,3vw,40px);display:flex;align-items:center;gap:12px;background:linear-gradient(transparent,#17130dec 36%);flex-wrap:wrap}
 #performTitle{margin-right:auto}#carryControl{display:flex;align-items:center;gap:8px}#carryControl input{accent-color:#c6a269;max-width:30vw}
 #performance.glimpse{inset:auto 12px 74px auto;width:clamp(140px,28%,380px);height:auto;aspect-ratio:16/9;box-shadow:0 4px 16px #0009;border:1px solid #ad946d;pointer-events:none}#performance.glimpse #performBar{display:none}
 #passage{perspective:900px;isolation:isolate;background:linear-gradient(0deg,#4c3726,#302720 13%,#867151 14%,#46392c 17%,#3b352c 100%)}
-.beyond,.threshold{position:absolute;inset:5% 11% 8%}.beyond{background:url(scene1.jpg) center/cover}#passage[data-destination="3"] .beyond{background-image:url(scene2.jpg)}
+.beyond,.threshold{position:absolute;inset:5% 11% 8%}.beyond{background:url(room-river.jpg) center/cover}#passage[data-destination="3"] .beyond{background-image:url(room-opera.jpg)}
 .threshold{border:clamp(8px,1.5vw,18px) ridge #725139;box-shadow:0 4px 20px #130d06;perspective:750px;overflow:hidden}
 .leaf{position:absolute;top:0;bottom:0;width:50%;border:6px ridge #695039;background:repeating-linear-gradient(90deg,#493324 0,#634832 5%,#513929 12%,#34281e 13%);box-shadow:inset 0 0 0 12px #523827,inset 0 0 0 15px #9c784b}
 .leaf::before,.leaf::after{content:"";position:absolute;left:4%;right:4%;height:7%;background:linear-gradient(#9e7b49,#57432e);border:1px solid #b39260}.leaf::before{top:21%}.leaf::after{bottom:17%}
@@ -57,11 +54,16 @@ button:enabled:hover{background:#463e30}button:focus-visible{outline-color:#e2b5
 
 #faceLine{order:4;flex-basis:100%;margin:0;line-height:1.7;color:#f7ebd6;text-shadow:0 1px 5px #000}#performBar:has(#faceLine:not([hidden])){background:linear-gradient(transparent,#130f0ced 24%)}
 
-.stage.working #stage3d{display:block}.stage.working #cinema,.stage.working #apprentice{display:none}
-.stage.working #performance{background:transparent}.stage.working #performFrame{inset:10px 10px auto auto;width:clamp(100px,24%,280px);aspect-ratio:16/9;box-shadow:0 0 0 1px #a18a67;overflow:hidden}
 
 .threshold .keeper{position:absolute;z-index:1;top:46.8%;width:3%;height:7%;background:linear-gradient(90deg,#503c24,#ac8f5c,#614e31);box-shadow:inset 0 0 0 1px #bfab7b;pointer-events:none}
 .threshold .keeper.near{left:45%}.threshold .keeper.far{left:59%}
 .barrier{cursor:grab;touch-action:none}.barrier::after{content:"";position:absolute;inset:-14px -3px}.barrier:active{cursor:grabbing}
 #passage[data-destination="3"] .keeper.near{left:auto;right:1.5%;width:5%;height:9%;top:0;border-radius:50%;border:3px solid #655037}
 #passage[data-destination="3"] .keeper.far{display:none}#passage[data-destination="3"] .barrier::after{inset:0 -14px}
+.stage.model-shot #stage3d{display:block}
+.stage.model-shot #performance{background:transparent}
+.stage.model-shot #cinema,.stage.model-shot #performFrame,.stage.model-shot .hud{display:none}
+.stage.wide.three .scene,.stage.model-shot.three .scene{background:#3d342d}
+#stage3d{touch-action:none}
+
+button{touch-action:manipulation}
