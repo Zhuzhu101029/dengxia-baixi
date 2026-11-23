@@ -35,11 +35,11 @@ const evNode=id=>document.getElementById(id);
 function cluesActive(){return !pendingCut&&!contactRun&&playing&&s.stage>=1&&s.stage<=3&&!s.alcove&&!beat}
 function clueReady(){return !!s.kit[s.stage]?.installed}
 function fieldNote(message){evNode('caseNote').textContent=message}
-function markScene(){lastKitView='';redrawUntil=performance.now()+700;syncCase()}
+function markScene(){lastKitView='';redrawUntil=performance.now()+700;syncCase();refreshReach()}
 function startExamine(slot){
-  if(!cluesActive())return;
+  if(!cluesActive()||!nearSite(slot))return;
   if(examining===null)returnToWide=wide;
-  const begin=()=>{wide=true;examining=slot;visual.probe=slot;
+  const begin=()=>{showConsole('case');wide=true;examining=slot;visual.probe=slot;
   fieldNote('');syncImmersion();lockStage(true);
   evNode('propCommands').inert=true;
   markScene();evNode('inspectHeading').focus({preventScroll:true});
@@ -59,7 +59,7 @@ function verifyMount(){
   caption('现场',evidence[s.stage].blocked);return false;
 }
 function changeItem(slot){
-  if(contactRun||examining!==slot)return;
+  if(contactRun||examining!==slot||!nearSite(slot))return;
   const row=s.kit[s.stage],book=evidence[s.stage];
   const chest=s.stage===3&&slot===1&&!row.opened;
   if(chest&&!(selectedPieces.length===1&&selectedPieces[0]===3)){

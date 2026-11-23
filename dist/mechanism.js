@@ -12,7 +12,7 @@
     .prop-hot[role=slider]{cursor:ew-resize}.prop-hot:focus-visible{outline:2px solid #ffdc8f;outline-offset:3px}.prop-hot:active{background:#70502e}
   `;
   document.head.append(style);
-  window.makeMechanism = (host,{onMove,onAction,onSound,onClue}) => {
+  window.makeMechanism = (host,{allowed,onMove,onAction,onSound,onClue}) => {
     const canvas = document.createElement('canvas');
     canvas.className = 'prop-surface';
     canvas.setAttribute('aria-hidden','true');
@@ -45,7 +45,7 @@
       if(Math.cos(rotation)<-.40)handle('drawer',drawerOpen?'合上暗格':'拉开暗格',[0,.45,z-.14],[0,.86,z-.24]);
     }
     function inspectRear(){
-      if(!playing)return;
+      if(!playing||!allowed('drawer'))return;
       const toRear=Math.cos(targetYaw)>0;
       const goal=toRear?Math.PI-.16:-.27;
       targetYaw+=Math.atan2(Math.sin(goal-targetYaw),Math.cos(goal-targetYaw));
@@ -53,7 +53,7 @@
       onSound('turn');schedule();
     }
     function operateDrawer(){
-      if(!playing||Math.cos(rotation)>=-.4)return;
+      if(!playing||!allowed('drawer')||Math.cos(rotation)>=-.4)return;
       drawerOpen=!drawerOpen;onSound('slide');
       if(drawerOpen)onClue(clues[stage]);
       schedule();
@@ -288,7 +288,7 @@
       actionTimer=null;abortGesture();
     }
     function fire(){
-      if(!playing||stage===4||actionTimer!==null)return;
+      if(!playing||!allowed('act')||stage===4||actionTimer!==null)return;
       if(isBell()&&!reduced)swing=1;
       actionTime=performance.now();schedule();
       actionTimer=setTimeout(()=>{
@@ -296,7 +296,7 @@
       },reduced?0:210);
     }
     function start(id,e){
-      if(!playing||e.button!==0||drag||actionTimer!==null)return;
+      if(!playing||!allowed(id)||e.button!==0||drag||actionTimer!==null)return;
       e.preventDefault();e.stopPropagation();
       e.currentTarget.setPointerCapture(e.pointerId);
       drag={id,start:e.clientX,top:e.clientY,value:id==='drawer'?drawer:values[id],pointer:e.pointerId,distance:0};
@@ -349,7 +349,7 @@
           btn.onclick=e=>{if(!e.detail){if(id==='act')fire();if(id==='drawer')operateDrawer()}};
           document.getElementById('propCommands').append(btn);controls.set(id,btn);
         }
-        btn.hidden=!playing;btn.textContent=id==='act'&&isBell()&&drag?.id==='act'?(pull>=.76?'松手响铃':'向下拉绳'):label+(id==='act'||id==='drawer'?'':' · '+values[id]);
+        btn.disabled=!allowed(id);btn.hidden=!playing;btn.textContent=id==='act'&&isBell()&&drag?.id==='act'?(pull>=.76?'松手响铃':'向下拉绳'):label+(id==='act'||id==='drawer'?'':' · '+values[id]);
         btn.setAttribute('aria-label',id==='act'||id==='drawer'?label:label+'，左右拖动或用方向键调整');
         if(id!=='act'&&id!=='drawer')btn.setAttribute('aria-valuenow',values[id]);
 

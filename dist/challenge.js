@@ -73,7 +73,7 @@ function openAlcove(kind){
   }
   el('alcoveFeedback').textContent=isBell?'已应铃 '+s.chimes+' / 3':'点选绣片，每次转四分之一圈。';
   window.paintAlcove(el('alcoveScene'),kind);
-  el('alcoveTitle').focus({preventScroll:true});
+  showConsole('case');el('alcoveTitle').focus({preventScroll:true});
 
 }
 el('repeatCue').onclick=hearScore;

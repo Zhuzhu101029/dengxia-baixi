@@ -1,9 +1,9 @@
 let beat='',beatTimer=0,beatFrame=0,portraitRole='a';
 function sceneBusy(){return Boolean(pendingCut||contactRun||examining!==null||s.alcove||beat&&beat!=='glimpse')}
 function lockStage(locked){
-  document.querySelector('.controls').inert=locked;
+  document.querySelector('.controls').inert=locked;el('extras').inert=locked;
   el('object').inert=locked;el('propCommands').inert=locked;
-  syncCase();
+  syncCase();refreshReach();
   el('drawer').inert=locked||!wide||s.role!=='a'||![1,3].includes(s.stage);
 }
 function closePerformance(){

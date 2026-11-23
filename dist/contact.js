@@ -25,7 +25,7 @@ function revealScene(){
   scrim.animate?.([{opacity:.96},{opacity:0}],{duration:reduced?90:340,easing:'ease-out'});
 }
 function playContact(point,role,ground,done,kind='touch',slot=-1){
-  if(pendingCut||contactRun||!playing)return;
+  if(pendingCut||contactRun||!playing||!inReach(point,role))return;
   stopMovement();clearTimeout(beatTimer);visual.work=null;
   const run={frame:0},previousWide=wide;contactRun=run;
   const scrim=el('shutter');scrim.getAnimations().forEach(a=>a.cancel());

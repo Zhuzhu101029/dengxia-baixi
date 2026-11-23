@@ -8,7 +8,7 @@
 .toolDrawer.folded{grid-template-rows:0fr;opacity:0;pointer-events:none}
 .toolClip{overflow:hidden;min-height:0}
 @media(prefers-reduced-motion:reduce){.dialog p,.dialog strong,.toolDrawer{transition:none}}
-</style><link rel="stylesheet" href="playhouse.css"></head><body><main class="main"><header><h1>灯下百戏 <i></i><small>借影搭桥</small></h1><div class="header-actions"><button id="sound" aria-pressed="true">声音开</button><button id="reset" title="重置本机游戏进度">重开</button></div></header><div class="hud"><div class="location"><small id="actNumber"></small><h2 id="place"></h2><span id="chapter"></span></div><span id="role"></span></div><section class="stage" aria-label="戏台游戏画面"><svg class="scene" viewBox="0 0 1000 450" preserveAspectRatio="xMidYMid meet" role="img" aria-label="阿照在台前操灯，拾影站在后方影幕的剪影上。">
+</style><link rel="stylesheet" href="playhouse.css"></head><body><main class="main"><header><h1>灯下百戏 <i></i><small>借影搭桥</small></h1><div class="header-actions"><button id="sound" aria-pressed="true">声音开</button><button id="reset" title="重置本机游戏进度">重开</button></div></header><div class="hud"><div class="location"><small id="actNumber"></small><h2 id="place"></h2><span id="chapter"></span></div><span id="role"></span></div><div id="gameLayout"><div id="sceneColumn"><section class="stage" aria-label="戏台游戏画面"><svg class="scene" viewBox="0 0 1000 450" preserveAspectRatio="xMidYMid meet" role="img" aria-label="阿照在台前操灯，拾影站在后方影幕的剪影上。">
 <defs>
 <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#1f1714" stop-opacity=".72"/><stop offset="1" stop-color="#100f0e"/></linearGradient>
 <radialGradient id="warm"><stop stop-color="#ffdf9a" stop-opacity=".8"/><stop offset="1" stop-color="#ffc46b" stop-opacity="0"/></radialGradient>
@@ -28,7 +28,7 @@
 <g id="a"><ellipse rx="19" ry="3" fill="#171612" opacity=".68"/><g id="bodyPose" stroke-linejoin="round"><path d="M-9 -18l-4 17 -7 1 2 2h11l8 -18 M5 -16l4 15 10 1 1 -3 -6 -1 -1 -17" fill="#302724"/><path d="M-7 -55l14 -1 8 13 7 31q-20 5 -42 -1l10 -33z" fill="url(#robe)" stroke="#442e25" stroke-width="2"/><path d="M-6 -53l8 13 6 -13 M-14 -18q15 5 32 0" fill="none" stroke="#e2bc85" stroke-width="2"/><path d="M-10 -48l-12 20 10 3 14 -14 M8 -46l13 13 10 -8 4 6 -15 15 -17 -14" fill="#995b43" stroke="#5e3a2c" stroke-width="2"/><path d="M-8 -67q1 -13 15 -8l5 9 4 4 -4 2q-1 9 -13 6z" fill="#e6bc89"/><path d="M-11 -62q-8 -17 5 -22 15 -3 20 12l-12 -4 -5 9z" fill="#292724"/><circle cx="-11" cy="-80" r="6" fill="#282522"/><path d="M-21 -76l23 -7" stroke="#cb8761" stroke-width="2"/></g></g>
 </g></svg>
 <canvas id="stage3d" aria-label="三维戏台"></canvas><div id="worldPins" aria-label="场景调查点" hidden><button type="button">◇</button><button type="button">◇</button><button type="button">◇</button></div><div id="cinema"><div class="backdrop" id="backdrop"></div><div class="vignette"></div><div id="object"></div><div id="crossing" hidden><div class="bank"></div><div class="span"></div><div class="traveller" aria-label="拾影当前位置"><svg viewBox="-40 -78 88 84" aria-hidden="true"><use href="#shadowPose"/></svg></div><div class="destination">铃</div></div></div><section id="performance" hidden aria-label="人物特写"><div id="performFrame"></div><div id="performBar"><strong id="performTitle"></strong><p id="faceLine" hidden></p><label id="carryControl">椅轨 <input id="carryRange" type="range" min="0" max="100"><output id="carryRead"></output></label><button id="otherFace">看拾影</button><button id="leaveBeat">回到戏台</button></div></section>
-<section id="alcove" hidden aria-labelledby="alcoveTitle"><canvas id="alcoveScene" aria-hidden="true"></canvas><div class="alcove-head"><small id="alcoveAct"></small><h2 id="alcoveTitle" tabindex="-1"></h2><p id="alcoveClue"></p></div><div id="instruments"></div><div class="alcove-foot"><p id="alcoveFeedback" aria-live="polite"></p><button id="repeatCue" type="button">辨听三铃</button></div></section><div id="shutter" aria-hidden="true"></div><div class="sceneLight" aria-hidden="true"></div><div class="dialog" aria-live="polite"><strong id="speaker"></strong><p id="dialog"></p><div id="projection" hidden aria-label="投影与左右桥墩的对齐情况"><i></i><b></b><em></em></div></div><div class="overlay" id="overlay"><div class="panel"><div class="kicker">北京皮影戏</div><h2>借影搭桥</h2><p>阿照落了门闩，刚把钥匙揣好，幕布后头有人敲了三下。她提着空灯回去。灯盏竟是满的，盏沿还挂着一滴油。</p><button class="primary" id="start">入戏</button><p class="hint">自动保存在当前设备的浏览器中</p></div></div></section><section id="evidenceDetail" hidden><div><h2 id="inspectHeading" tabindex="-1"></h2><p id="inspectText"></p></div><div class="caseActions"><button id="handleItem"></button><button id="leaveEvidence">退出近看</button></div></section><section id="caseArea" hidden aria-label="现场与装备"><div id="fieldSites"><h2>现场调查</h2><div id="siteList"></div></div><div class="bagRow"><h2>随身装备</h2><div id="bagSlots"></div><button id="combine" hidden>拼合所选物件</button></div><p id="caseNote" aria-live="polite"></p><details><summary>线索手记</summary><div id="caseHistory"></div></details></section><div id="propCommands" aria-label="机关操作"></div><div class="controls"><button id="left">向左</button><button id="right">向右</button><button class="primary" id="action">互动</button><button id="switch">切换角色</button><button id="hint">提示</button><button id="portrait" disabled>人物特写</button><button id="carry" hidden>搬动木椅</button><button id="inspect" hidden>查看匣背</button><button id="view">戏台全景</button></div><div class="toolDrawer folded" id="drawer" inert><div class="toolClip"><section class="tools" id="tools"><strong id="toolTitle"></strong><label id="chairLabel">移动椅子 <input id="chair" type="range" min="0" max="100" value="25"><output id="chairOut"></output></label><label id="lampLabel">调整灯光 <input id="lamp" type="range" min="0" max="100" value="25"><output id="lampOut"></output></label><label id="angleLabel">转动视角 <input id="angle" type="range" min="0" max="100" value="15"><output id="angleOut"></output></label><div class="hint" id="feedback"></div></section></div></div><p class="hint guide" id="guide"></p></main><script src="sound.js"></script><script src="mechanism.js"></script><script src="evidence.js"></script><script src="relics.js"></script><script src="room.js"></script><script src="stage.js"></script><script>
+<section id="alcove" hidden aria-labelledby="alcoveTitle"><canvas id="alcoveScene" aria-hidden="true"></canvas><div class="alcove-head"><small id="alcoveAct"></small><h2 id="alcoveTitle" tabindex="-1"></h2><p id="alcoveClue"></p></div><div id="instruments"></div><div class="alcove-foot"><p id="alcoveFeedback" aria-live="polite"></p><button id="repeatCue" type="button">辨听三铃</button></div></section><div id="shutter" aria-hidden="true"></div><div class="sceneLight" aria-hidden="true"></div><div class="overlay" id="overlay"><div class="panel"><div class="kicker">北京皮影戏</div><h2>借影搭桥</h2><p>阿照落了门闩，刚把钥匙揣好，幕布后头有人敲了三下。她提着空灯回去。灯盏竟是满的，盏沿还挂着一滴油。</p><button class="primary" id="start">入戏</button><p class="hint">自动保存在当前设备的浏览器中</p></div></div></section><div class="dialog" aria-live="polite"><strong id="speaker"></strong><p id="dialog"></p></div></div><aside id="gameConsole"><div class="controls"><button id="left">向左</button><button id="right">向右</button><button class="primary" id="action">互动</button><button id="switch">切换角色</button></div><div id="reachStatus"></div><div class="consoleTabs"><button id="toolsTab" aria-pressed="true">操作</button><button id="caseTab" aria-pressed="false">装备与调查</button></div><div id="consoleScroll"><div id="toolsPage"><div class="toolDrawer folded" id="drawer" inert><div class="toolClip"><section class="tools" id="tools"><div class="toolHead"><strong id="toolTitle"></strong><div id="projection" hidden aria-label="投影与左右桥墩的对齐情况"><i></i><b></b><em></em></div></div><label id="chairLabel">移动椅子 <input id="chair" type="range" min="0" max="100" value="25"><output id="chairOut"></output></label><label id="lampLabel">调整灯光 <input id="lamp" type="range" min="0" max="100" value="25"><output id="lampOut"></output></label><label id="angleLabel">转动视角 <input id="angle" type="range" min="0" max="100" value="15"><output id="angleOut"></output></label><div class="hint" id="feedback"></div></section></div></div><div id="propCommands" aria-label="机关操作"></div><div id="extras"><button id="hint">提示</button><button id="portrait" disabled>人物特写</button><button id="carry" hidden>搬动木椅</button><button id="inspect" hidden>查看匣背</button><button id="view">戏台全景</button></div><p class="hint guide" id="guide"></p></div><div id="itemsPage" hidden><section id="evidenceDetail" hidden><div><h2 id="inspectHeading" tabindex="-1"></h2><p id="inspectText"></p></div><div class="caseActions"><button id="handleItem"></button><button id="leaveEvidence">退出近看</button></div></section><section id="caseArea" hidden aria-label="现场与装备"><div id="fieldSites"><h2>现场调查</h2><div id="siteList"></div></div><div class="bagRow"><h2>随身装备</h2><div id="bagSlots"></div><button id="combine" hidden>拼合所选物件</button></div><p id="caseNote" aria-live="polite"></p><details><summary>线索手记</summary><div id="caseHistory"></div></details></section></div></div></aside></div></main><script src="sound.js"></script><script src="mechanism.js"></script><script src="evidence.js"></script><script src="relics.js"></script><script src="room.js"></script><script src="stage.js"></script><script>
 'use strict';
 const el=id=>document.getElementById(id);
 const key='dengxia-shadow-v2';
@@ -131,7 +131,7 @@ function step(dir,amount){
   }else pos=Math.max(5,Math.min(88,pos));
   s[who]=pos;
   if(pos!==old)visual.dir[who]=dir;
-  if(old!==pos){if(!wide){wide=true;syncImmersion()}el(who).setAttribute('transform','translate('+pos*10+' '+(who==='a'?389:265)+')');redrawUntil=performance.now()+2400}
+  if(old!==pos){refreshReach();if(!wide){wide=true;syncImmersion()}el(who).setAttribute('transform','translate('+pos*10+' '+(who==='a'?389:265)+')');redrawUntil=performance.now()+2400}
 
 }
 function changeStage(n){
@@ -141,13 +141,13 @@ function changeStage(n){
   if(!reduced&&typeof stage.animate==='function'){
     el('chapter').animate([{opacity:.15,transform:'translateY(3px)'},{opacity:1,transform:'translateY(0)'}],{duration:620});
   }
-  stopMovement();wide=n===2||n===4;
+  stopMovement();wide=true;showConsole('tools');
   stageSound.play(n===4?'end':'transition');s.stage=n;if(n===2)stageSound.play('bell');el('shutter').animate?.([{opacity:.96},{opacity:0}],{duration:reduced?0:850});render();save();
 }
-function swap(){if(!playing||sceneBusy()||!s.stage||s.stage===4)return;stopMovement();stageSound.play('swap');s.role=s.role==='a'?'b':'a';wide=s.role==='b';render();save()}
+function swap(){if(!playing||sceneBusy()||!s.stage||s.stage===4)return;stopMovement();stageSound.play('swap');s.role=s.role==='a'?'b':'a';wide=true;render();save()}
 function action(){
-  if(!playing)return;
-  if(s.stage===0&&s.a<=28)return changeStage(1);
+  if(!nearMain())return;
+  if(s.stage===0)return changeStage(1);
   if(((s.stage===1&&s.role==='a')||(s.stage===2&&s.role==='b'&&s.b>=70)||(s.stage===3&&s.role==='b'&&s.b<=29))&&!verifyMount())return;
   if(s.stage===1&&s.role==='a'&&isAligned())return playContact(stageProp('lock'),'a',0,()=>changeStage(2));
   if(s.stage===2&&s.role==='b'&&s.b>=70)return playContact(stageProp('bell'),'b',.98,()=>openAlcove('bells'),'pull');
@@ -163,10 +163,10 @@ function endCard(){
   el('start').textContent='回看戏台';playing=false;if(visual.started)render();window.setTimeout(()=>{if(s.stage===4&&!playing)curtain(true)},reduced?0:2450);
 }
 const card=el('overlay').querySelector('h2').innerHTML,prologue=el('overlay').querySelector('.panel p').textContent;
-el('start').onclick=()=>{stageSound.unlock();stageSound.play("open");playing=true;visual.started=true;wide=!s.stage||s.stage===4||s.role==='b';curtain(false);render();if(s.alcove){openAlcove(s.alcove);return}el('action').focus({preventScroll:true})};
+el('start').onclick=()=>{stageSound.unlock();stageSound.play("open");playing=true;visual.started=true;wide=true;curtain(false);render();if(s.alcove){openAlcove(s.alcove);return}el('action').focus({preventScroll:true})};
 if(s.stage===4)endCard();else if(s.stage)el('start').textContent='继续上回';
 el('action').onclick=action;el('switch').onclick=swap;el('hint').onclick=()=>{if(!playing)return;const row=s.kit[s.stage];render(row&&!row.installed?'看看这间屋里的几处旧物。拿在手里对一对，看哪两件原来在一起。':tips[s.stage])};
-el('reset').onclick=()=>{if(!confirm('从后台初遇重新开始？当前存档会被替换。'))return;cancelContact();resetCaseView();closePerformance();leaveAlcove();stopMovement();wide=false;visual.dir={a:1,b:1};s=initial();lockStage(false);playing=false;visual.started=false;visual.look=0;visual.pitch=0;visual.motion={a:newMotion(),b:newMotion()};visual.a=s.a;visual.b=s.b;el('overlay').querySelector('h2').innerHTML=card;el('overlay').querySelector('.panel p').textContent=prologue;el('start').textContent='入戏';curtain(true);render();save()};
+el('reset').onclick=()=>{if(!confirm('从后台初遇重新开始？当前存档会被替换。'))return;cancelContact();resetCaseView();closePerformance();leaveAlcove();showConsole('tools');stopMovement();wide=false;visual.dir={a:1,b:1};s=initial();lockStage(false);playing=false;visual.started=false;visual.look=0;visual.pitch=0;visual.motion={a:newMotion(),b:newMotion()};visual.a=s.a;visual.b=s.b;el('overlay').querySelector('h2').innerHTML=card;el('overlay').querySelector('.panel p').textContent=prologue;el('start').textContent='入戏';curtain(true);render();save()};
 for(const k of ['chair','lamp','angle'])el(k).oninput=e=>{
   if(!playing||s.role!=='a')return;
   if(s.stage===3&&s.b>31&&s.b<69){render('拾影还在桥上。先让他走到岸边，再转窗棂。');return}
@@ -201,7 +201,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();if(!pressed.has(k)){pressed.add(k);tapDistance=0}
   }
   if(k==='q'&&!e.repeat){e.preventDefault();swap()}
-  if(k===' '&&!e.repeat&&(e.target.tagName!=='BUTTON'||e.target===el('action'))){e.preventDefault();objectAction()}
+  if(k===' '&&!e.repeat&&(e.target.tagName!=='BUTTON'||e.target===el('action'))){e.preventDefault();interactHere()}
 });
 document.addEventListener('keyup',e=>{pressed.delete(e.key.toLowerCase());save()});
 let draw;try{draw=theatre(el('stage3d'))}catch{}
@@ -287,8 +287,9 @@ function tick(time){
   }
   requestAnimationFrame(tick);
 }
-</script><script src="performance.js"></script><script src="alcoves.js"></script><script src="challenge.js"></script><script src="contact.js"></script><script src="sequence.js"></script><script src="playhouse.js"></script><script>
+</script><script src="performance.js"></script><script src="alcoves.js"></script><script src="challenge.js"></script><script src="reach.js"></script><script src="contact.js"></script><script src="sequence.js"></script><script src="playhouse.js"></script><script>
 Array.from(el('worldPins').children).forEach((b,i)=>b.onclick=()=>startExamine(i));
+el('toolsTab').onclick=()=>showConsole('tools');el('caseTab').onclick=()=>showConsole('case');
 el('leaveEvidence').onclick=finishExamine;
 el('handleItem').onclick=()=>{if(examining!==null)changeItem(examining)};
 el('combine').onclick=combinePieces;

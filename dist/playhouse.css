@@ -136,3 +136,62 @@ header{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 0}
 #shutter{z-index:8}
 .stage.in-alcove>#shutter{display:block}
 @media(max-width:650px){#worldPins{height:clamp(380px,57svh,560px)}#caseArea h2{flex-basis:100%}#caseArea button,#evidenceDetail button{min-height:44px}.caseActions{gap:6px}.bagRow,#fieldSites{align-items:flex-start}}
+
+/* The stage and its controller occupy the same viewport. Only the selected
+   controller page scrolls, so dragging a range never scrolls the stage away. */
+.main{height:100vh;height:100dvh;width:100%;max-width:1800px;display:flex;flex-direction:column;padding:0 clamp(8px,1.8vw,28px);overflow:hidden}
+.main>header{flex:none;min-height:46px;padding:5px 0}
+.main>.hud{flex:none;padding:5px 0 8px}
+#gameLayout{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) clamp(285px,29%,405px);gap:12px;padding-bottom:10px}
+#sceneColumn{display:flex;flex-direction:column;min-width:0;min-height:0}
+#sceneColumn>.stage{flex:1;min-height:0;isolation:isolate}
+#sceneColumn .stage :is(.scene,#stage3d,#cinema,.sceneLight,.overlay,#worldPins,#performance){width:100%;height:100%;min-height:0;max-height:none;aspect-ratio:auto}
+#sceneColumn>.dialog{flex:none;min-height:0;padding:8px 12px;gap:8px;max-height:20dvh;overflow:auto}
+#sceneColumn .stage #alcove{height:100%;min-height:0;overflow:auto;grid-template-rows:auto minmax(100px,1fr) auto}
+#gameConsole{min-height:0;min-width:0;display:flex;flex-direction:column;border:1px solid var(--line);background:#22231f}
+#gameConsole .controls{flex:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:8px;gap:5px}
+#gameConsole .controls button{min-width:0;min-height:40px;padding:5px 7px;line-height:1.25;font-size:15px}
+#reachStatus{font-size:14px;line-height:1.4;color:#e3ceb1;padding:0 10px 7px}
+.consoleTabs{display:flex;flex:none;border-block:1px solid var(--line)}
+.consoleTabs button{flex:1;min-height:36px;border:0;background:transparent;color:#bdaf98;padding:5px}
+.consoleTabs button[aria-pressed=true]{color:#f8d396;background:#342e22;box-shadow:inset 0 -2px #c39c63}
+#consoleScroll{min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;flex:1;padding:8px}
+#consoleScroll [hidden],#gameConsole .controls[hidden]{display:none!important}
+#gameConsole .tools{padding:6px 4px;border:0;background:none;gap:5px}
+#gameConsole .tools label{grid-template-columns:5em minmax(0,1fr) 2em;gap:6px;min-height:34px}
+#gameConsole input[type=range]{min-width:0;touch-action:pan-y}
+#gameConsole .tools label:has(input:disabled){opacity:.55}
+#extras{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+#extras button,#siteList button,#bagSlots button{min-height:36px;padding:4px 9px}
+#gameConsole #caseArea,#gameConsole #evidenceDetail{margin:0 0 6px;padding:8px}
+#gameConsole .guide{font-size:14px;margin:6px 0}
+#worldPins button:disabled{opacity:.38;cursor:default}
+.main:not(:has(.stage.in-play)) #gameLayout{grid-template-columns:1fr}
+.main:not(:has(.stage.in-play)) :is(#gameConsole,#sceneColumn>.dialog){display:none}
+.main:has(.in-alcove) #gameConsole :is(.controls,#reachStatus,.consoleTabs){display:none}
+.main:has(.in-alcove) #sceneColumn>.dialog{display:none}
+@media(max-width:699px){
+ .main{padding:0 6px}.main>header{min-height:40px;padding:2px 0}.main>header h1{font-size:20px}
+ .main>header button{min-height:32px}.main>.hud{padding:3px 0 5px;gap:3px}
+ .main>.hud .location h2{font-size:17px}.main>.hud #chapter{display:none}
+ #gameLayout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1.25fr) minmax(0,1fr);gap:5px;padding-bottom:5px}
+ .main:not(:has(.stage.in-play)) #gameLayout{grid-template-rows:minmax(0,1fr)}
+ #gameConsole .controls{grid-template-columns:.75fr .75fr 1.55fr 1fr;padding:4px;gap:3px}
+ #gameConsole .controls button{font-size:14px;letter-spacing:0;min-height:38px}
+ #reachStatus{padding:0 7px 4px;font-size:13px}.consoleTabs button{min-height:32px}
+ #sceneColumn>.dialog{grid-template-columns:max-content minmax(0,1fr);font-size:14px;padding:4px 7px;max-height:14dvh}
+ #sceneColumn>.dialog #projection{display:none}
+ #consoleScroll{padding:5px}#gameConsole .tools{gap:2px}
+ .main:has(.in-alcove) #gameLayout{grid-template-rows:minmax(0,3fr) minmax(0,1fr)}
+}
+@media (max-height:500px) and (orientation:landscape){
+ .main>header{min-height:33px;padding:0}.main>header h1{font-size:20px}
+ .main>.hud{padding:2px 0}.main>.hud .location h2{font-size:16px}
+ #gameLayout{grid-template-columns:minmax(0,1fr) minmax(235px,35%);grid-template-rows:minmax(0,1fr);gap:6px}
+ #gameConsole .controls{display:flex;flex-wrap:wrap;padding:3px}.controls button{flex:1}
+ .main:not(:has(.stage.in-play)) #gameLayout{grid-template-columns:1fr}
+}
+
+.toolHead{display:flex;gap:8px;justify-content:space-between;align-items:center}
+#gameConsole #projection{width:clamp(74px,10vw,130px);height:19px;flex:none}
+#gameConsole #caseTab:disabled{opacity:.55}

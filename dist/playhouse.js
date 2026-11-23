@@ -21,24 +21,27 @@ el('sound').onclick=()=>{
 };
 let previousChair=s.chair;
 function adjustProp(k,v){
-  if(!playing||s.role!=='a'){render('此处需要阿照掌灯，先切换角色。');return}
+  if(!nearTool(k)||sceneBusy()&&!(k==='chair'&&beat==='chair')){if(el(k))el(k).value=s[k];return}
   if((s.stage===1&&!['chair','lamp'].includes(k))||(s.stage===3&&k!=='angle')||![1,3].includes(s.stage))return;
   if(s.stage===3&&s.b>31&&s.b<69){render('等拾影走到岸边，才能转动窗棂。');return}
   const value=Math.max(0,Math.min(100,Math.round(v)));
   if(!Number.isFinite(value)||s[k]===value)return;
-  const aligned=isAligned();if(k==='chair')previousChair=s.chair;s[k]=value;
+  const aligned=isAligned();if(k==='chair')previousChair=s.chair;
+  // Stay alongside the moving prop during a continuous adjustment.
+  if(k==='chair'||k==='lamp'){s.a+=(value-s[k])*(k==='chair'?.24:.09);visual.a=s.a}
+  s[k]=value;
   stageSound.play(!aligned&&isAligned()?'tick':k==='angle'?'turn':'slide');
   render();save();
   if(k==='chair')showCarry(value);
 }
 function objectAction(){
-  if(!playing||sceneBusy())return;
-  if(s.stage===0&&s.a<=28){playContact(stageProp('lamp'),'a',0,action,'light');return}
+  if(!nearMain()||sceneBusy())return;
+  if(s.stage===0){playContact(stageProp('lamp'),'a',0,action,'light');return}
 
   action();
 }
-const mechanism=window.makeMechanism(el('object'),{onMove:adjustProp,onAction:objectAction,onClue:text=>caption('匣中手记',text),onSound:name=>stageSound.play(name)});
-el('action').onclick=objectAction;
+const mechanism=window.makeMechanism(el('object'),{allowed:allowHandle,onMove:adjustProp,onAction:objectAction,onClue:text=>caption('匣中手记',text),onSound:name=>stageSound.play(name)});
+el('action').onclick=interactHere;
 function syncTraveller(){
   const track=el('crossing');
   const show=playing&&!wide&&(s.stage===2||s.stage===3)&&s.role==='b';
@@ -63,7 +66,7 @@ function syncImmersion(){
   el('view').disabled=!playing;el('inspect').hidden=!playing||wide;
   el('switch').textContent=s.role==='a'?'换拾影':'换阿照';
   el('action').textContent=['点灯','固定影桥','拉响铜铃','牵袖拉铃','谢幕'][s.stage];
-  el('guide').textContent=act[2]+(wide?'　可拖动画面环视，或切回机关特写。':'　移动时切至戏台全景。');
+  el('guide').textContent=act[2]+(wide?'　走近物件后可操作。':'　移动时切至戏台全景。');
   el('drawer').style.display=wide?'':'none';
   el('action').disabled=!playing||s.stage===4;
   el('left').disabled=el('right').disabled=!playing||s.stage===4;
@@ -76,16 +79,16 @@ function syncImmersion(){
     projection.classList.toggle('aligned',isAligned());
   }
   mechanism.update(s.stage,s,playing&&!wide);
-  syncTraveller();syncCase();
+  syncTraveller();syncCase();refreshReach();
 }
 el('view').onclick=()=>{
   if(sceneBusy())return;
   const toggle=()=>{stopMovement();wide=!wide;stageSound.play('open');render()};
-  if(wide&&s.stage<4){const name=['lamp','lock','bell',s.role==='a'?'window':'bell'][s.stage];
+  if(wide&&s.stage<4){const name=closeupProp();if(!name)return;
     playContact(stageProp(name),name==='bell'?'b':'a',name==='bell'?.98:0,toggle);
   }else dissolve(toggle)
 };
 
 
 
-el('inspect').onclick=()=>mechanism.inspectRear();
+el('inspect').onclick=()=>{if(allowHandle('drawer'))mechanism.inspectRear()};
