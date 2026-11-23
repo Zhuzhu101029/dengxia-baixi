@@ -34,13 +34,11 @@
     const drawerDepth=()=>[2.16,2.72,1.78,1.88,2.16][stage]||2;
     function rearDrawer(){
       const end=-drawerDepth()/2-.06, z=end-drawer*.84;
-      block(0,.31,(end+z)/2,1.65,.075,Math.max(.12,end-z),iron,.025);
-      if(drawer>.12){
-        block(0,.39,(z+end)/2,1.39,.035,Math.max(.02,(end-z)*.85),gold,.01);
-        for(let i=-2;i<=2;i++)block(i*.22,.43,(z+end)/2,.045,.015,(end-z)*(.32+.12*(2-Math.abs(i))),lacquer,.001);
-      }
-      block(0,.29,z,1.81,.36,.10,wood,.04,true);
-      for(const x of [-.82,.82])block(x,.29,z-.05,.07,.36,.06,gold,.014);
+      block(0,.32,z+.48,1.65,.075,.88,iron,.025);
+      block(0,.395,z+.46,1.39,.035,.72,gold,.01);
+      for(let i=-2;i<=2;i++)block(i*.22,.43,z+.46,.045,.015,.32+.12*(2-Math.abs(i)),lacquer,.001);
+      block(0,.32,z,1.81,.29,.10,wood,.04,true);
+      for(const x of [-.82,.82])block(x,.32,z-.05,.07,.29,.06,gold,.014);
       block(0,.40,z-.08,.44,.08,.20,bright,.025);
       if(Math.cos(rotation)<-.40)handle('drawer',drawerOpen?'合上暗格':'拉开暗格',[0,.45,z-.14],[0,.86,z-.24]);
     }
@@ -118,7 +116,11 @@
       }
       for(const a of [-1,1])for(const b of [-1,1])block(a*(w/2-.4),.04,b*(d/2-.32),.58,.21,.45,brass);
       block(0,.18,0,w,.13,d,gold);
-      block(0,.28,0,w-.09,.48,d-.08,wood,.09,true);
+      // The tray runs in a hollow case. Only the stiles flank its opening.
+      const opening=1.87,sideWidth=(w-.09-opening)/2;
+      for(const side of [-1,1])block(side*(opening+sideWidth)/2,.28,0,sideWidth,.48,d-.08,wood,.035,true);
+      block(0,.28,d/2-.14,opening,.48,.20,wood,.035,true);
+      block(0,.63,0,opening,.13,d-.08,wood,.035,true);
       block(0,.65,0,w,.07,d,brass);
       block(0,.72,0,w-.18,.14,d-.16,wood,.045,true);
       for(const a of [-1,1])for(const b of [-1,1])screw(a*(w/2-.28),.86,b*(d/2-.25));
@@ -142,9 +144,9 @@
       for(let i=0;i<=20;i++)block((i/20-.5)*4.3,1.02,z+.16,.02,.01,i%5===0?.22:.09,ivory,.002);
       const x=(values[id]/100-.5)*4.3;
       const targetX=(target/100-.5)*4.3, seated=Math.abs(values[id]-target)<=5;
-      block(targetX,1,z-.27,.1,.12,.17,bright);
+      block(targetX,1,z-.38,.1,.12,.17,bright);
       // A spring pin sinks flush into its keeper when the carriage reaches the mark.
-      lathe(targetX,z+.33,[[.095,.89,iron],[.095,.99,brass],[.065,seated?1.0:1.13,seated?patina:bright]],12);
+      lathe(targetX,z+.40,[[.095,.89,iron],[.095,.99,brass],[.065,seated?1.0:1.13,seated?patina:bright]],12);
       for(const side of [-1,1])block(x,.995,z+side*.18,.62,.07,.07,brass,.01);
       block(x,1.03,z,.78,.17,.55,brass);
       if(id==='lamp')lantern(x,z,1.18,.45);
@@ -194,7 +196,8 @@
       const dt=Math.min(.05,(now-lastDraw)/1000||.016);lastDraw=now;
       const k=reduced?1:1-Math.exp(-dt*14);
       rotation+=(targetYaw-rotation)*k;zoom+=(targetZoom-zoom)*k;
-      if(drag?.id!=='drawer')drawer+=(Number(drawerOpen)-drawer)*k;
+      const drawerGoal=drag?.id==='drawer'?drag.goal:Number(drawerOpen);
+      drawer+=Math.sign(drawerGoal-drawer)*Math.min(Math.abs(drawerGoal-drawer),dt*2.8);
       if(!ctx||!width||!height)return;
       ctx.clearRect(0,0,width,height);
       // Painted first because every part of the furniture sits above this plane.
@@ -266,7 +269,7 @@
       }
       const inspect=document.getElementById('inspect');
       inspect.textContent=Math.cos(targetYaw)<0?'查看正面':'查看匣背';
-      if(Math.abs(targetYaw-rotation)>.001||Math.abs(zoom-targetZoom)>.001||Math.abs(Number(drawerOpen)-drawer)>.001)schedule();
+      if(Math.abs(targetYaw-rotation)>.001||Math.abs(zoom-targetZoom)>.001||Math.abs(drawerGoal-drawer)>.00001)schedule();
       placeControls();if(actionTimer!==null&&!reduced)schedule();
       if(swing>.01){swing=Math.max(0,swing-.032);schedule()}
     }
@@ -296,16 +299,16 @@
       },reduced?0:210);
     }
     function start(id,e){
-      if(!playing||!allowed(id)||e.button!==0||drag||actionTimer!==null)return;
+      if(!playing||!allowed(id)||!e.isPrimary||e.button!==0||drag||lookDrag||actionTimer!==null)return;
       e.preventDefault();e.stopPropagation();
       e.currentTarget.setPointerCapture(e.pointerId);
-      drag={id,start:e.clientX,top:e.clientY,value:id==='drawer'?drawer:values[id],pointer:e.pointerId,distance:0};
+      drag={id,start:e.clientX,top:e.clientY,value:id==='drawer'?drawer:values[id],pointer:e.pointerId,goal:drawer,distance:0};
       if(id==='act'){press=.55;pull=0;schedule()}
     }
     function move(e){
       if(!drag||e.pointerId!==drag.pointer)return;
       if(drag.id==='drawer'){
-        drawer=Math.max(0,Math.min(1,drag.value+(e.clientY-drag.top)/Math.max(26,scale*.6)));
+        drag.goal=Math.max(0,Math.min(1,drag.value+(e.clientY-drag.top)/Math.max(26,scale*.6)));
         schedule();return;
       }
       if(drag.id==='act'){
@@ -320,8 +323,8 @@
     function finish(e){
       if(!drag||e.pointerId!==drag.pointer)return;
       if(drag.id==='drawer'){const tap=Math.hypot(e.clientX-drag.start,e.clientY-drag.top)<7;
-        move(e);drag=null;
-        if(tap||(drawer>=.5)!==drawerOpen)operateDrawer();else schedule();
+        move(e);const pulledOpen=drag.goal>=.5;drag=null;
+        if(tap||pulledOpen!==drawerOpen)operateDrawer();else schedule();
         return}
       if(drag.id!=='act'){drag=null;return}
       move(e);
@@ -338,13 +341,13 @@
           if(id!=='act'&&id!=='drawer'){
             btn.setAttribute('role','slider');btn.setAttribute('aria-valuemin','0');btn.setAttribute('aria-valuemax','100');
           }
-          btn.onpointerdown=e=>start(id,e);btn.onpointermove=move;btn.onpointerup=finish;btn.onpointercancel=abortGesture;
+          btn.onpointerdown=e=>start(id,e);btn.onpointermove=move;btn.onpointerup=finish;btn.onpointercancel=cancelPointer;
           btn.onkeydown=e=>{
             if(!playing)return;
             if((id==='act'||id==='drawer')&&[' ','Enter'].includes(e.key)){e.stopPropagation();e.preventDefault();if(!e.repeat){if(id==='drawer')operateDrawer();else fire()}return}
             if(id==='act'||id==='drawer'||!['ArrowLeft','ArrowRight','ArrowDown','ArrowUp','Home','End'].includes(e.key))return;
             e.stopPropagation();e.preventDefault();
-            onMove(id,e.key==='Home'?0:e.key==='End'?100:Math.max(0,Math.min(100,values[id]+(['ArrowLeft','ArrowDown'].includes(e.key)?-1:1)*(e.shiftKey?5:1))));
+            onMove(id,e.key==='Home'?0:e.key==='End'?100:Math.max(0,Math.min(100,requestedMark(id)+(['ArrowLeft','ArrowDown'].includes(e.key)?-1:1)*(e.shiftKey?5:1))));
           };
           btn.onclick=e=>{if(!e.detail){if(id==='act')fire();if(id==='drawer')operateDrawer()}};
           host.append(btn);controls.set(id,btn);
@@ -357,19 +360,23 @@
       }
     }
     canvas.onpointerdown=e=>{
-      if(!playing||e.button!==0)return;
+      if(!playing||!e.isPrimary||drag||lookDrag||e.button!==0)return;
       const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
       const nearest=points.map(p=>[p,Math.hypot(x-p.pt[0],y-p.pt[1])]).sort((a,b)=>a[1]-b[1])[0];
       if(nearest&&nearest[1]<Math.max(22,scale*(stage===3?.75:.66)))start(nearest[0].id,e);
-      else {lookDrag={x:e.clientX,rotation:targetYaw};canvas.setPointerCapture(e.pointerId)}
+      else {lookDrag={id:e.pointerId,x:e.clientX,rotation:targetYaw};canvas.setPointerCapture(e.pointerId)}
     };
     canvas.onpointermove=e=>{
-      if(lookDrag){targetYaw=lookDrag.rotation+(e.clientX-lookDrag.x)*.009;schedule()}
+      if(lookDrag?.id===e.pointerId){targetYaw=lookDrag.rotation+(e.clientX-lookDrag.x)*.009;schedule()}
       else move(e);
     };
-    canvas.onpointerup=e=>{lookDrag=null;finish(e)};canvas.onpointercancel=abortGesture;
+    canvas.onpointerup=e=>{if(lookDrag?.id===e.pointerId)lookDrag=null;finish(e)};canvas.onpointercancel=cancelPointer;
     window.addEventListener('blur',abortAction);
-    const lostCapture=e=>{if(drag?.pointer===e.pointerId)abortGesture()};
+    function cancelPointer(e){
+      if(drag?.pointer!==e.pointerId&&lookDrag?.id!==e.pointerId)return;
+      stopPropTravel();abortGesture();
+    }
+    const lostCapture=cancelPointer;
     host.addEventListener('lostpointercapture',lostCapture);
     const observer=new ResizeObserver(resize);observer.observe(host);
     return {inspectRear,update(next,state,active){

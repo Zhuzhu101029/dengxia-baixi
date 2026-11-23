@@ -1,4 +1,4 @@
-let beat='',beatTimer=0,beatFrame=0,portraitRole='a';
+let beat='',portraitRole='a';
 function sceneBusy(){return Boolean(pendingCut||contactRun||examining!==null||s.alcove||beat&&beat!=='glimpse')}
 function lockStage(locked){
   document.querySelector('.controls').inert=locked;el('extras').inert=locked;
@@ -7,7 +7,7 @@ function lockStage(locked){
   el('drawer').inert=locked||!wide||s.role!=='a'||![1,3].includes(s.stage);
 }
 function closePerformance(){
-  clearTimeout(beatTimer);cancelAnimationFrame(beatFrame);
+  propDrag=null;stopPropTravel();
   visual.tuning=null;visual.work=null;visual.shot=null;stageNode.classList.remove('model-shot');redrawUntil=performance.now()+900;
   beat='';el('performance').hidden=true;el('performance').classList.remove('glimpse');
   lockStage(Boolean(s.alcove));
@@ -33,26 +33,14 @@ function inspectFace(role){
   el('otherFace').textContent=role==='a'?'看拾影':'看阿照';paintBeat('portrait',0,role);
   el('leaveBeat').focus({preventScroll:true});
 }
-function showCarry(value){
-  if(beat!=='chair'){
-    // Keep a wide-view drag on the stage, with both hands following the rail.
-    if(!beat&&wide&&draw){
-      if(!visual.work)visual.work={position:previousChair,height:0,moving:0};
-      clearTimeout(beatTimer);const finish=()=>{if(beat)return;if(visual.work&&Math.abs(visual.work.position-s.chair)>.04){beatTimer=setTimeout(finish,160);return}visual.work=null;redrawUntil=performance.now()+900};
-      beatTimer=setTimeout(finish,500);
-    }
-    return;
-  }
-  el('carryRead').value=value;el('carryRange').value=value;
-  paintBeat('chair',value/100,'a');
-}
 el('portrait').onclick=()=>inspectFace(s.role);
 el('otherFace').onclick=()=>dissolve(()=>inspectFace(portraitRole==='a'?'b':'a'));
 el('carry').onclick=()=>playContact(stageProp('chair'),'a',0,()=>{
   openBeat('chair');
-  if(draw){visual.work={position:s.chair,height:0,moving:0}}
+  s.a=36+s.chair*.24;visual.a=s.a;save();
+  if(draw)visual.work={height:0,moving:0};
   el('performTitle').textContent='阿照 · 搬椅';
-  el('carryCaption').textContent='椅轨';showCarry(s.chair);el('carryRange').focus({preventScroll:true});
+  el('carryCaption').textContent='椅轨';el('carryRead').value=el('carryRange').value=s.chair;paintBeat('chair',s.chair/100,'a');el('carryRange').focus({preventScroll:true});
 },'lift');
 el('carryRange').oninput=e=>{const k=visual.tuning||'chair';adjustProp(k,+e.target.value);el('carryRead').value=s[k]};
 function openTuning(k){
@@ -66,14 +54,31 @@ function openTuning(k){
     el('carryRange').focus({preventScroll:true});redrawUntil=performance.now()+800;
   });
 }
-el('leaveBeat').onclick=()=>{dissolve(()=>{closePerformance();el('options').focus({preventScroll:true})})};
+const returnButton=el('leaveBeat');
+function returnToStage(){
+  if(!beat||pendingCut||contactRun)return;
+  dissolve(()=>{closePerformance();el('options').focus({preventScroll:true})});
+}
+returnButton.onclick=returnToStage;
+// A touch immediately following a drag can end without a synthesized click.
+let returnTouch=null;
+returnButton.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='touch'&&e.isPrimary)returnTouch={id:e.pointerId,x:e.clientX,y:e.clientY};
+});
+returnButton.addEventListener('pointerup',e=>{
+  if(returnTouch?.id!==e.pointerId)return;
+  const travel=Math.hypot(e.clientX-returnTouch.x,e.clientY-returnTouch.y);
+  returnTouch=null;
+  if(travel<12&&returnButton.contains(document.elementFromPoint(e.clientX,e.clientY)))returnToStage();
+});
+for(const event of ['pointercancel','lostpointercapture'])returnButton.addEventListener(event,e=>{
+  if(returnTouch?.id===e.pointerId)returnTouch=null;
+});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(beat==='chair'||beat==='tune'||beat==='portrait'))el('leaveBeat').click()});
 
-function advanceCarry(dt){
+function advanceCarry(dt,moved){
   const w=visual.work;if(!w)return;
-  const delta=s.chair-w.position;
-  w.position+=Math.sign(delta)*Math.min(Math.abs(delta),dt*30);
-  const rate=Math.abs(delta)>.03?1:0;
+  const rate=moved?1:0;
   w.moving+=(rate-w.moving)*(1-Math.exp(-dt*12));
   w.height=.115*w.moving;
   redrawUntil=performance.now()+300;

@@ -26,7 +26,7 @@ function revealScene(){
 }
 function playContact(point,role,ground,done,kind='touch',slot=-1){
   if(pendingCut||contactRun||!playing||!inReach(point,role))return;
-  stopMovement();clearTimeout(beatTimer);visual.work=null;
+  stopMovement();visual.work=null;
   const run={frame:0},previousWide=wide;contactRun=run;
   const scrim=el('shutter');scrim.getAnimations().forEach(a=>a.cancel());
   const rect=el('stage3d').parentElement.getBoundingClientRect();
@@ -64,11 +64,12 @@ function playContact(point,role,ground,done,kind='touch',slot=-1){
   }
   run.frame=requestAnimationFrame(frame);
 }
+const bellLaneZ=-1.61;
 function stageProp(name){
   if(name==='lamp')return [wx(17+s.lamp*.09)+.42,1.28,.25];
-  if(name==='chair')return [wx(36+s.chair*.24),1.20,-.01];
+  if(name==='chair')return [wx(36+s.chair*.24),1.20,.49];
   if(name==='window')return window.relicSpots(3)[2];
   if(name==='lock')return window.relicSpots(1)[2];
-  return [wx(s.stage===2?74:25),1.80,-.86];
+  return [wx(s.stage===2?74:25),1.80,bellLaneZ];
 }
 

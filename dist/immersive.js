@@ -106,8 +106,10 @@ document.addEventListener('keydown',e=>{
  if(k==='v'&&!sceneBusy()){e.preventDefault();if(!e.repeat)el('view').click();return}
  if(k==='r'&&!wide&&allowHandle('drawer')){e.preventDefault();if(!e.repeat)el('inspect').click();return}
  if(k==='escape'){e.preventDefault();e.stopImmediatePropagation();if(examining!==null||beat||!wide)exitDetail();else if(!s.alcove)showSheet(menu);return}
- if((beat==='tune'||beat==='chair')&&['arrowleft','arrowright','a','d'].includes(k)&&e.target!==el('carryRange')){
-   e.preventDefault();const field=visual.tuning||'chair';adjustProp(field,s[field]+(['a','arrowleft'].includes(k)?-1:1)*(e.shiftKey?5:1));el('carryRead').value=el('carryRange').value=s[field];return;
+ if((beat==='tune'||beat==='chair')&&['arrowleft','arrowright','a','d','arrowup','arrowdown','home','end'].includes(k)){
+   e.preventDefault();e.stopImmediatePropagation();const field=visual.tuning||'chair';
+   const direction=['a','arrowleft','arrowdown'].includes(k)?-1:1;
+   adjustProp(field,k==='home'?0:k==='end'?100:requestedMark(field)+direction*(e.shiftKey?5:1));return;
  }
  if(k==='e'||k===' '){
    if(e.target.tagName==='BUTTON'&&k===' '&&document.activeElement?.matches('dialog button,#instruments button,#performBar button,#evidenceDetail button'))return;
@@ -122,13 +124,17 @@ document.addEventListener('keydown',e=>{
 
 let propDrag=null;
 immersiveStage.addEventListener('pointerdown',e=>{
- if(e.target!==stageCanvas||!['tune','chair'].includes(beat)||e.button!==0)return;
+ if(propDrag||!e.isPrimary||e.target!==stageCanvas||!['tune','chair'].includes(beat)||e.button!==0)return;
  const k=visual.tuning||'chair';propDrag={id:e.pointerId,x:e.clientX,base:s[k],k};
  e.preventDefault();stageCanvas.setPointerCapture(e.pointerId);
 });
 immersiveStage.addEventListener('pointermove',e=>{
- if(!propDrag||propDrag.id!==e.pointerId||!['tune','chair'].includes(beat))return;
+ if(!propDrag||propDrag.id!==e.pointerId||!['tune','chair'].includes(beat)||propDrag.k!==(visual.tuning||'chair'))return;
  const {x,base,k}=propDrag;adjustProp(k,base+(e.clientX-x)*100/(stageCanvas.clientWidth*.65));
  el('carryRead').value=el('carryRange').value=s[k];
 });
-for(const type of ['pointerup','pointercancel','lostpointercapture'])immersiveStage.addEventListener(type,()=>{propDrag=null});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])immersiveStage.addEventListener(type,e=>{
+ if(propDrag?.id!==e.pointerId)return;
+ propDrag=null;if(type==='pointercancel')stopPropTravel();
+});
+window.addEventListener('blur',()=>{propDrag=null});

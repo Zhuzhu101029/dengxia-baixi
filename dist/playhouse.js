@@ -19,20 +19,46 @@ el('sound').onclick=()=>{
   if(!muted)stageSound.play('tick');
   try{localStorage.setItem('dengxia-muted',muted?'1':'0')}catch{}
 };
-let previousChair=s.chair;
+// Input chooses a destination. Only the simulation advances a physical control.
+let propTravel=null;
+const propRates={chair:40,lamp:65,angle:75};
+function mayAdjust(k){
+  return playing&&Object.hasOwn(propRates,k)&&nearTool(k)&&!pendingCut&&!contactRun&&
+    (!sceneBusy()||k==='chair'&&beat==='chair'||k===visual.tuning&&beat==='tune');
+}
+function requestedMark(k){return propTravel?.key===k?propTravel.goal:s[k]}
+function stopPropTravel(){propTravel=null}
 function adjustProp(k,v){
-  if(!nearTool(k)||sceneBusy()&&!(k==='chair'&&beat==='chair'||k===visual.tuning&&beat==='tune')){if(el(k))el(k).value=s[k];return}
-  if((s.stage===1&&!['chair','lamp'].includes(k))||(s.stage===3&&k!=='angle')||![1,3].includes(s.stage))return;
-  if(s.stage===3&&s.b>31&&s.b<69){render('等拾影走到岸边，才能转动窗棂。');return}
-  const value=Math.max(0,Math.min(100,Math.round(v)));
-  if(!Number.isFinite(value)||s[k]===value)return;
-  const aligned=isAligned();if(k==='chair')previousChair=s.chair;
-  // Stay alongside the moving prop during a continuous adjustment.
-  if(k==='chair'||k==='lamp'){s.a+=(value-s[k])*(k==='chair'?.24:.09);visual.a=s.a}
-  s[k]=value;
-  stageSound.play(!aligned&&isAligned()?'tick':k==='angle'?'turn':'slide');
-  render();save();
-  if(k==='chair')showCarry(value);
+  if(!Number.isFinite(v)||!mayAdjust(k))return;
+  if(k==='angle'&&s.b>31&&s.b<69){render('等拾影走到岸边，才能转动窗棂。');return}
+  const goal=Math.max(0,Math.min(100,Math.round(v)));
+  if(propTravel?.key===k){propTravel.goal=goal;return}
+  if(goal!==s[k])propTravel={key:k,goal,position:s[k]};
+}
+function advanceProp(dt){
+  const travel=propTravel;if(!travel)return false;
+  const k=travel.key;
+  if(!mayAdjust(k)||document.hidden||document.querySelector('dialog[open]')){stopPropTravel();return false}
+  const delta=travel.goal-travel.position;
+  const distance=Math.min(Math.abs(delta),propRates[k]*Math.min(dt,.05));
+  travel.position=distance===Math.abs(delta)?travel.goal:travel.position+Math.sign(delta)*distance;
+  const mark=Math.round(travel.position),previous=s[k],aligned=isAligned();
+  if(travel.position===travel.goal)stopPropTravel();
+  if(mark===previous)return false;
+  s[k]=mark;
+  if(k!=='angle'){
+    const scale=k==='chair'?.24:.09;s.a+=(mark-previous)*scale;
+    visual.a=s.a;
+  }
+  if(!aligned&&isAligned())stageSound.play('tick');
+  else if(Math.floor(mark/5)!==Math.floor(previous/5))stageSound.play(k==='angle'?'turn':'slide');
+  render();
+  if(beat==='chair'||beat==='tune'){
+    el('carryRange').value=el('carryRead').value=mark;
+    if(beat==='chair'&&!draw)paintBeat('chair',mark/100,'a');
+  }
+  if(!propTravel||performance.now()-lastSave>350){save();lastSave=performance.now()}
+  return k==='chair';
 }
 function objectAction(){
   if(!nearMain()||sceneBusy())return;
