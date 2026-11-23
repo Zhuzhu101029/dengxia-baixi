@@ -33,8 +33,8 @@ function adjustProp(k,v){
 }
 function objectAction(){
   if(!playing||sceneBusy())return;
-  if(s.stage===0&&s.a<=28){lightWick();return}
-  if(s.role==='b'&&((s.stage===2&&s.b>=70)||(s.stage===3&&s.b<=29&&isAligned())))stageSound.play('bell');
+  if(s.stage===0&&s.a<=28){playContact(stageProp('lamp'),'a',0,action,'light');return}
+
   action();
 }
 const mechanism=window.makeMechanism(el('object'),{onMove:adjustProp,onAction:objectAction,onClue:text=>caption('匣中手记',text),onSound:name=>stageSound.play(name)});
@@ -76,9 +76,15 @@ function syncImmersion(){
     projection.classList.toggle('aligned',isAligned());
   }
   mechanism.update(s.stage,s,playing&&!wide);
-  syncTraveller();
+  syncTraveller();syncCase();
 }
-el('view').onclick=()=>{stopMovement();wide=!wide;stageSound.play('open');render()};
+el('view').onclick=()=>{
+  if(sceneBusy())return;
+  const toggle=()=>{stopMovement();wide=!wide;stageSound.play('open');render()};
+  if(wide&&s.stage<4){const name=['lamp','lock','bell',s.role==='a'?'window':'bell'][s.stage];
+    playContact(stageProp(name),name==='bell'?'b':'a',name==='bell'?.98:0,toggle);
+  }else dissolve(toggle)
+};
 
 
 

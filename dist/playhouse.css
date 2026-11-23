@@ -116,3 +116,23 @@ header{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 0}
 .bronze-bell{clip-path:polygon(41% 0,59% 0,64% 5%,72% 8%,81% 20%,83% 48%,88% 75%,100% 92%,98% 98%,82% 100%,18% 100%,2% 98%,0 92%,12% 75%,17% 48%,19% 20%,28% 8%,36% 5%)}
 #alcove[data-kind=bells] #instruments button:before{content:"";position:absolute;top:0;left:49%;height:18px;border-left:3px solid #b3a279}
 #alcove[data-kind=silk] #instruments{border-bottom-width:12px;box-shadow:0 7px 0 -2px #72583f,0 11px 0 -3px #49382a,0 17px 13px #1d120c80}
+
+#worldPins{position:absolute;top:0;left:0;width:100%;height:clamp(350px,64vh,760px);pointer-events:none;z-index:2}
+#worldPins button{position:absolute;pointer-events:auto;transform:translate(-50%,-50%);width:40px;height:40px;min-height:0;padding:0;border:1px solid #ddc392;border-radius:50%;background:#261f16da;color:#ffe0a4;font-size:23px;line-height:1;box-shadow:0 2px 8px #140f0d90}
+#worldPins[hidden],#worldPins button[hidden],#evidenceDetail[hidden],#caseArea[hidden],#fieldSites[hidden],#combine[hidden]{display:none}
+#caseArea,#evidenceDetail{margin:10px 0;padding:14px clamp(12px,2vw,24px);border:1px solid #796749;background:#22241f}
+#caseArea h2,#evidenceDetail h2{margin:0;font-size:17px;font-weight:500;letter-spacing:.12em;color:#e9c994}
+#caseArea h2{flex:0 0 auto}
+#fieldSites,.bagRow,#siteList,#bagSlots,.caseActions,#evidenceDetail{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}
+#evidenceDetail{justify-content:space-between;background:#302a20;border-left:3px solid #d0a165}
+#evidenceDetail p,#caseHistory p{line-height:1.65;margin:.35em 0 0}
+#caseArea .bagRow{padding:10px 0}
+#bagSlots{color:#d6c9b0}
+#bagSlots [aria-pressed=true],#handleItem:enabled,#combine:enabled{background:#71482e;border-color:#d7ab70;color:#fff2cf}
+#caseNote{line-height:1.6;margin:0;color:#f2cf9f}
+#caseArea details{border-top:1px solid #615640;margin-top:6px;padding-top:8px}
+#caseArea summary{cursor:pointer;width:fit-content;color:#dbbf91}
+#caseHistory{max-width:75ch}
+#shutter{z-index:8}
+.stage.in-alcove>#shutter{display:block}
+@media(max-width:650px){#worldPins{height:clamp(380px,57svh,560px)}#caseArea h2{flex-basis:100%}#caseArea button,#evidenceDetail button{min-height:44px}.caseActions{gap:6px}.bagRow,#fieldSites{align-items:flex-start}}

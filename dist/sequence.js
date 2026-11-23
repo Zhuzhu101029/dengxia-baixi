@@ -1,8 +1,9 @@
 let beat='',beatTimer=0,beatFrame=0,portraitRole='a';
-function sceneBusy(){return Boolean(s.alcove||beat&&beat!=='glimpse')}
+function sceneBusy(){return Boolean(pendingCut||contactRun||examining!==null||s.alcove||beat&&beat!=='glimpse')}
 function lockStage(locked){
   document.querySelector('.controls').inert=locked;
   el('object').inert=locked;el('propCommands').inert=locked;
+  syncCase();
   el('drawer').inert=locked||!wide||s.role!=='a'||![1,3].includes(s.stage);
 }
 function closePerformance(){
@@ -45,27 +46,14 @@ function showCarry(value){
   el('carryRead').value=value;el('carryRange').value=value;
   paintBeat('chair',value/100,'a');
 }
-function lightWick(){
-  openBeat('lamp');el('performTitle').textContent='阿照 · 点灯';
-  const start=performance.now(),duration=reduced?500:1550;
-  let lit=false;
-  function frame(now){
-    if(beat!=='lamp')return;
-    const p=Math.min(1,(now-start)/duration);paintBeat('lamp',p,'a');
-    if(!lit&&p>=.59){stageSound.play('lamp');lit=true}
-    if(p<1)beatFrame=requestAnimationFrame(frame);
-    else{closePerformance();action();el('action').focus({preventScroll:true})}
-  }
-  frame(start);
-}
 el('portrait').onclick=()=>inspectFace(s.role);
-el('otherFace').onclick=()=>inspectFace(portraitRole==='a'?'b':'a');
-el('carry').onclick=()=>{
+el('otherFace').onclick=()=>dissolve(()=>inspectFace(portraitRole==='a'?'b':'a'));
+el('carry').onclick=()=>playContact(stageProp('chair'),'a',0,()=>{
   openBeat('chair');
   if(draw){visual.work={position:s.chair,height:0,moving:0}}
   el('performTitle').textContent='阿照 · 搬椅';
   showCarry(s.chair);el('carryRange').focus({preventScroll:true});
-};
+},'lift');
 el('carryRange').oninput=e=>adjustProp('chair',+e.target.value);
 el('leaveBeat').onclick=()=>{const trigger=beat==='chair'?'carry':'portrait';closePerformance();el(trigger).focus({preventScroll:true})};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(beat==='chair'||beat==='portrait'))el('leaveBeat').click()});

@@ -111,11 +111,11 @@ function theatre(canvas,software=false) {
       .102+.145*Math.sin(Math.PI*u)**2*weight,
       Math.sin(facing)*dx+Math.cos(facing)*dz];
   }
-  function actor(x,y,z,opera,motion,facing,t,sleeve,finale,grip=null,wick=null){
+  function actor(x,y,z,opera,motion,facing,t,sleeve,finale,grip=null,wick=null,touch=null){
     const {phase,weight}=motion, skin=opera?'eac9b1':'c99776',hair='302a29';
     const coat=opera?'446c77':'344154', sleeveColor=opera?'527d83':'45536a',hem=opera?'b88e5c':'61443b';
     origin=[x,y,z];yaw=facing;
-    const pelvis=.88+.025*weight*Math.cos(2*phase)-(grip?.bend||0);
+    const pelvis=.88+.025*weight*Math.cos(2*phase)-(grip?.bend||0)-(touch?.reach||0)*.055;
     const breath=.009*Math.sin(t*1.8+(opera?1.2:0)),torso=pelvis+breath;
     const greeting=finale;
     for(const sign of [-1,1]){
@@ -130,10 +130,22 @@ function theatre(canvas,software=false) {
       const arm=-reach*.21,wristUp=sign>0?greeting:0;
       const shoulder=[sign*.215,torso+.48,.002],elbow=[sign*(.244+.07*wristUp),torso+.245+.135*wristUp,-.032+arm*.62];
       const hand=[sign*(.237+.10*wristUp),torso+.04+.345*wristUp,.074+arm+.17*wristUp];
-      if(grip || (wick!==null && sign===1)){
+      if(grip || ((wick!==null||touch) && sign===1)){
         // The back rail is modelled in this same local basis. Both wrists follow it.
-        if(grip){hand[0]=sign*.25;hand[1]=1.19+grip.height;hand[2]=.39}
-        else {
+        if(grip){
+          const target=[sign*.25,1.19+grip.height,.39];
+          for(let i=0;i<3;i++)hand[i]+=(target[i]-hand[i])*grip.blend;
+        }
+        else if(touch){
+          const [tx,ty,tz]=touch.point,dx=tx-x,dz=tz-z;
+          const local=[Math.cos(facing)*dx-Math.sin(facing)*dz,ty-y-touch.pull,Math.sin(facing)*dx+Math.cos(facing)*dz];
+          if(touch.kind==='light'){local[1]-=.15;local[2]-=.11}
+          for(let i=0;i<3;i++)hand[i]+=(local[i]-hand[i])*touch.reach;
+          if(touch.kind==='light'){
+            const tip=[hand[0],hand[1]+.15,hand[2]+.11];bone(hand,tip,.016,.012,'ad8050');
+            shape(...tip,[[0,.019,.019],[.036,.016,.016],[.072,.001,.001]],'ffd28b',8);
+          }
+        }else {
           const reach=Math.sin(Math.PI*Math.min(1,wick/.98))**.7;
           hand[0]=.15;hand[1]=1.02+.16*reach;hand[2]=.14+.24*reach;
           const tip=[hand[0],hand[1]+.17,hand[2]+.15];
@@ -149,7 +161,7 @@ function theatre(canvas,software=false) {
       bone(shoulder,elbow,.112,.098,sleeveColor);bone(elbow,hand,.098,opera?.105:.068,sleeveColor);
       const cuff=hand.map((v,k)=>v+(elbow[k]-v)*.12);
       bone(cuff,hand,opera?.107:.071,opera?.107:.071,opera?'e9d7b5':hem);
-      if(grip){
+      if(grip&&grip.blend>.85){
         // Knuckles rest above the top lip. Four fingertips curl down the near face.
         const top=1.272+grip.height;
         bone([hand[0],hand[1],.34],[hand[0],top,.382],.038,.043,skin);
@@ -160,6 +172,15 @@ function theatre(canvas,software=false) {
         }
       }
       shape(hand[0],hand[1]-.035,hand[2],[[ -.047,.027,.027],[.016,.048,.041],[.062,.038,.033]],skin,8);
+      if(sign>0&&touch&&((touch.kind==='take'&&touch.transferred)||(touch.kind==='fit'&&!touch.transferred))){
+        const [hx,hy,hz]=hand;
+        if(touch.chapter===1)box(hx,hy+.032,hz+.014,.29,.052,.024,'c99c69');
+        else if(touch.chapter===2&&touch.slot!==1){
+          shape(hx,hy-.13,hz,[[0,.025,.025],[.03,.059,.059],[.085,.041,.041],[.17,.014,.014]],'c0995a',10);
+        }else if(touch.slot===1){
+          for(let j=0;j<3;j++)oval(hx,hy-.015+j*.015,hz+.018,.058,.044,.015,touch.chapter===3?'b65545':'ac885a');
+        }else limb(hx,hy-.05,hx+.045,hy+.17,.010,hz+.018,'dfbc7e');
+      }
       if(opera&&sleeve&&sign>0)bone(hand,[hand[0]+.028,hand[1]-.226,hand[2]-.09*weight],.08,.055,'ebddbe');
     }
     const robe=[[opera?-.50:-.31,.30,.19],[0,.209,.149],[.13,.175,.13],[.37,.22,.158],[.46,.224,.146],[.51,.135,.103],[.52,.084,.087]];
@@ -272,7 +293,21 @@ function theatre(canvas,software=false) {
     }else if(work){
       target=[cx,.88,.05];eye=[cx+1.65,1.78,2.98];
     }
+    const anchors=s.stage>=1&&s.stage<=3?window.relicSpots(s.stage):[];
+    if(visual.probe!=null&&anchors[visual.probe]){
+      const [x,y,z]=anchors[visual.probe];target=[x,y,z];eye=[x+.4,y+.5,z+2.2];
+    }
+    const contact=visual.contact;
+    if(contact){
+      const [x,y,z]=contact.point;
+      target=[x-.27,(y+contact.ground+1.02)*.5,z+.18];
+      eye=[x+1.82,contact.ground+1.89,z+2.95];
+    }
     const forward=unit(sub(target,eye)),right=unit(cross(forward,[0,1,0])),up=cross(right,forward);
+    visual.pickCoords=anchors.map(p=>{
+      const v=sub(p,eye),d=dot(v,forward);return [.5+1.25*h/w*dot(v,right)/d,.5-1.25*dot(v,up)/d,d];
+    });
+    projectClues(visual.pickCoords);
     const targetWarmth=[.38,.85,.78,.72,1.05][s.stage];
     warmth=(warmth??targetWarmth)+(targetWarmth-(warmth??targetWarmth))*(1-Math.exp(-dt*2.4));
     finalPose+=((s.stage===4?1:0)-finalPose)*(1-Math.exp(-dt*2));
@@ -376,6 +411,16 @@ function theatre(canvas,software=false) {
       environments.set(room,{mesh:data,shellLength,buffer});
     }
     const env=environments.get(room);data=[];
+    origin=[0,0,0];yaw=0;
+    if(anchors.length){
+      const token={...s.kit[s.stage]};
+      if(contact?.transferred){
+        if(contact.kind==='take')token.mask|=1<<contact.slot;
+        if(contact.kind==='fit')token.installed=true;
+        if(contact.kind==='unlock')token.opened=true;
+      }
+      window.drawRelics(s.stage,token,{box,shape,limb,oval,panel});
+    }
     const left=wx(33),rightEnd=wx(67),z=-.88,deckY=.98;
     function deck(lo,hi){box((lo+hi)/2,deckY-.11,z,hi-lo,.22,.75,'504138');box((lo+hi)/2,deckY-.035,z+.38,hi-lo,.047,.03,'d3a975')}
     for(const x of room==='river'?[]:[wx(20),left-.18,rightEnd+.18,wx(78)]){
@@ -399,8 +444,10 @@ function theatre(canvas,software=false) {
         }
       }
     }
-    const chairHeight=work?work.height:0;
-    origin=[cx,chairHeight,.24];yaw=work?0:-.3;
+    const lifting=contact?.kind==='lift';
+    const lift= lifting?.085*eased((contact.progress-.48)/.14)*(1-eased((contact.progress-.68)/.12)):0;
+    const chairHeight=work?work.height:lift||0;
+    origin=[cx,chairHeight,.24];yaw=work||lifting?0:-.3;
     for(let x of [-.29,.29])for(let z of [-.25,.25])box(x,.27,z,.085,.54,.085,'583c2e');
     box(0,.56,0,.72,.12,.64,'ab7650');for(let x of [-.29,.29])box(x,.91,-.25,.075,.74,.08,'80573d');box(0,1.20,-.25,.66,.14,.09,'a9784f');origin=[0,0,0];yaw=0;
     // A portable lamp is bolted to a vertical backboard and hooked to its bracket.
@@ -409,7 +456,7 @@ function theatre(canvas,software=false) {
     limb(lx,1.42,lx+.34,1.69,.034,lz,'946b44');
     box(lx+.42,1.62,lz,.036,.17,.04,'a38250');
     box(lx+.42,1.51,lz,.35,.08,.36,'65462f');
-    box(lx+.42,1.28,lz,.29,.39,.30,s.stage||lampShot&&shot.progress>=.59?'f4bc64':'957d5a');
+    box(lx+.42,1.28,lz,.29,.39,.30,s.stage||lampShot&&shot.progress>=.59||contact?.kind==='light'&&contact.transferred?'f4bc64':'957d5a');
     box(lx+.42,1.08,lz,.33,.05,.34,'65462f');
     for(const dx of [-.14,.14])for(const dz of [-.146,.146])
       box(lx+.42+dx,1.28,lz+dz,.025,.39,.025,'6c4933');
@@ -424,26 +471,28 @@ function theatre(canvas,software=false) {
       box(post,1.04,back,.21,.13,.21,'ae8758');
       box(gx+.15,2.19,back,.52,.105,.16,'684c36');
       box(gx,2.17,z-.12,.09,.11,.45,'806246');
-      box(gx,1.995,z,.042,.32,.042,'b99455');
-      shape(gx,1.69,z,[[0,.13,.13],[.04,.115,.115],[.13,.078,.078],[.16,.044,.044]],'bb9758');
-      box(gx,1.64,z,.032,.14,.033,'c7a263');
-      oval(gx,1.56,z,.055,.056,.05,'e5c283');
+      const drop=contact?.kind==='pull'?contact.pull:0;
+      box(gx,1.995-drop/2,z,.042,.32+drop,.042,'b99455');
+      shape(gx,1.69-drop,z,[[0,.13,.13],[.04,.115,.115],[.13,.078,.078],[.16,.044,.044]],'bb9758');
+      box(gx,1.64-drop,z,.032,.14,.033,'c7a263');
+      oval(gx,1.56-drop,z,.055,.056,.05,'e5c283');
     }
     // The apprentice walks downstage, the furniture sits midstage and the puppet walks on the raised rear deck.
     for(const k of ['a','b']){
+      if(contact&&k!==contact.role)continue;
       if(portrait?shot.role!==k:k==='b'&&(!s.stage||work||lampShot))continue;
       const carrying=k==='a'&&work, lighting=k==='a'&&lampShot;
-      const x=carrying?cx:lighting?lx-.22:wx(visual[k]),y=k==='a'?0:deckY;
-      const zp=carrying?-.40:lighting?lz+.30:k==='a'?1.65:z;
+      const x=lifting?cx-.18*(1-contact.step):contact?contact.point[0]-.19-.38*(1-contact.step):carrying?cx:lighting?lx-.22:wx(visual[k]),y=contact?contact.ground:k==='a'?0:deckY;
+      const zp=lifting?-.40:contact?contact.point[2]+(contact.ground?.31:.43):carrying?-.40:lighting?lz+.30:k==='a'?1.65:z;
       origin=[x,y+.009,zp];yaw=0;
       for(let j=0;j<12;j++){
         const a=j*Math.PI/6,b=(j+1)*Math.PI/6;
         tri(point(0,0,0),point(.27*Math.cos(b),0,.12*Math.sin(b)),point(.27*Math.cos(a),0,.12*Math.sin(a)),'40352d');
       }
-      const facing=portrait?.08:carrying?0:lighting?Math.PI*.5:visual.motion[k].yaw;
-      const motion=carrying?{phase:cx*2*Math.PI/1.12,weight:work.moving}:visual.motion[k];
+      const facing=lifting?0:contact?Math.PI*.50+contact.step*1.16:portrait?.08:carrying?0:lighting?Math.PI*.5:visual.motion[k].yaw;
+      const motion=contact?{phase:x*2*Math.PI/1.12,weight:Math.sin(Math.PI*contact.step)}:carrying?{phase:cx*2*Math.PI/1.12,weight:work.moving}:visual.motion[k];
       actor(x,y+.014,zp,k==='b',motion,facing,t,s.stage>=3,portrait?0:finalPose,
-        carrying?{height:chairHeight-.014,bend:.055+chairHeight*.18}:null,lighting?shot.progress:null);
+        carrying||lifting?{height:chairHeight-.014,bend:.055+chairHeight*.18,blend:lifting?contact.reach:1}:null,lighting?shot.progress:null,contact);
     }
     if(!gl){paint(env,eye,right,up,forward,light,brightness,w,h);return}
     function bindMesh(buffer){
