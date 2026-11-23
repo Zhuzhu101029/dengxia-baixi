@@ -347,14 +347,12 @@
             onMove(id,e.key==='Home'?0:e.key==='End'?100:Math.max(0,Math.min(100,values[id]+(['ArrowLeft','ArrowDown'].includes(e.key)?-1:1)*(e.shiftKey?5:1))));
           };
           btn.onclick=e=>{if(!e.detail){if(id==='act')fire();if(id==='drawer')operateDrawer()}};
-          host.append(btn);controls.set(id,btn);
+          document.getElementById('propCommands').append(btn);controls.set(id,btn);
         }
         btn.hidden=!playing;btn.textContent=id==='act'&&isBell()&&drag?.id==='act'?(pull>=.76?'松手响铃':'向下拉绳'):label+(id==='act'||id==='drawer'?'':' · '+values[id]);
         btn.setAttribute('aria-label',id==='act'||id==='drawer'?label:label+'，左右拖动或用方向键调整');
         if(id!=='act'&&id!=='drawer')btn.setAttribute('aria-valuenow',values[id]);
-        const half=(btn.offsetWidth||76)/2;
-        btn.style.left=Math.max(half,Math.min(width-half,tag[0]))+'px';
-        btn.style.top=Math.max(18,Math.min(height-19,tag[1]))+'px';
+
       }
     }
     canvas.onpointerdown=e=>{

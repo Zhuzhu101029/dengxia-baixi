@@ -67,3 +67,52 @@ button:enabled:hover{background:#463e30}button:focus-visible{outline-color:#e2b5
 #stage3d{touch-action:none}
 
 button{touch-action:manipulation}
+/* Keep all live labels in document flow, including the mechanism controls. */
+.main>.hud{position:static;inset:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;flex-wrap:wrap}
+.main>.hud .location{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;min-width:0}
+.main>.hud .location h2{font-size:clamp(20px,2.2vw,32px);margin:0;line-height:1.4}
+.main>.hud #role{white-space:nowrap}
+.main:not(:has(.stage.in-play))>.hud,.main:has(.in-alcove)>.hud{display:none}
+#propCommands{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+#propCommands:has(button:not([hidden])){padding:12px 4px 2px}
+#propCommands .prop-hot{position:static;transform:none;min-height:44px;white-space:normal;line-height:1.4}
+#propCommands[inert],#propCommands button[hidden]{display:none}
+.dialog{display:grid;grid-template-columns:max-content minmax(0,1fr) auto;align-items:center}
+.dialog p,.panel,.alcove-head,.alcove-foot{overflow-wrap:anywhere}
+header{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 0}
+.header-actions{flex-wrap:wrap}
+#alcove[hidden]{display:none}
+.stage.in-alcove>:not(#alcove){display:none}
+.main:has(.in-alcove) :is(.controls,.toolDrawer,.guide,#propCommands){display:none}
+#alcove{isolation:isolate;position:relative;min-height:clamp(430px,65vh,770px);display:grid;grid-template-rows:auto minmax(156px,1fr) auto;padding:clamp(14px,3vw,40px);gap:16px;background:#28201b}
+#alcoveScene{position:absolute;inset:0;width:100%;height:100%;z-index:-2}
+.alcove-head,.alcove-foot{width:fit-content;max-width:100%;padding:12px 18px;background:#171813ee;border:1px solid #8f7650;color:#f2e4c6}
+.alcove-head h2{font-weight:500;font-size:clamp(23px,3.4vw,42px);letter-spacing:.1em;line-height:1.3;margin:3px 0}
+.alcove-head small{color:#e6c687}.alcove-head p,.alcove-foot p{margin:0;line-height:1.6}
+.alcove-foot{justify-self:center;display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;justify-content:center}
+#instruments{display:flex;align-items:center;align-self:center;justify-self:center;justify-content:center;max-width:100%}
+#alcove[data-kind=bells] #instruments{align-items:flex-start;border-top:10px ridge #835e41;gap:clamp(2px,2vw,30px);padding:0 7px 7px}
+#instruments button{position:relative;display:grid;justify-items:center;align-items:center;min-width:0}
+#alcove[data-kind=bells] #instruments button{width:clamp(60px,9vw,120px);padding:16px 3px 4px;border:0;background:transparent;color:#fff2cb;text-shadow:0 1px 4px #000}
+.bronze-bell{display:block;width:calc(100% * var(--bell-size));height:calc(clamp(80px,10vw,130px) * var(--bell-size));border-radius:45% 45% 13% 13%;border-bottom:6px ridge #a58d55;background:repeating-linear-gradient(0deg,transparent 0 13px,#c9b17c66 14px,transparent 16px),linear-gradient(90deg,#524d3a,#bb9a60 38%,#84724d 70%,#423e31);transform-origin:center top}
+.bronze-bell:before{content:"";position:absolute;top:0;left:49%;height:17px;border-left:3px solid #b3a279}
+#instruments button>span:last-child{background:#211f17;padding:3px 9px;border-radius:2px;font-size:15px}
+#instruments .ringing{outline:2px solid #f1cc79}.ringing .bronze-bell{animation:chime .52s ease-in-out}
+@keyframes chime{25%{transform:rotate(12deg)}70%{transform:rotate(-6deg)}}
+#alcove[data-kind=silk] #instruments{position:relative;border:8px ridge #845f42;background:#635345;box-shadow:0 12px 18px #1d120c80}
+#alcove[data-kind=silk] #instruments:before,#alcove[data-kind=silk] #instruments:after{content:"";position:absolute;top:calc(50% - 4px);width:9px;height:8px;border-radius:50%;background:#ffda81;z-index:1}
+#alcove[data-kind=silk] #instruments:before{left:-7px}#alcove[data-kind=silk] #instruments:after{right:-7px}
+#alcove[data-kind=silk] #instruments button{width:clamp(48px,22vw,130px);padding:0;border:0;border-radius:0;background:repeating-linear-gradient(42deg,#617878,#657c78 2px,#637772 4px)}
+#instruments svg{display:block;width:100%;aspect-ratio:1;transition:transform .16s}
+@media(max-width:650px){.dialog{grid-template-columns:max-content minmax(0,1fr)}#projection{grid-column:2;margin:0}.main>.hud{gap:6px}.main>.hud .location{gap:4px 8px}.tools label{grid-template-columns:5em minmax(0,1fr) 2em}.overlay{overflow:auto}.panel{max-width:100%}#performBar{max-height:100%;overflow:auto}#alcove{padding:12px;gap:10px}.alcove-head,.alcove-foot{padding:9px 12px}.header-actions button{padding:5px 7px}}
+
+
+.overlay{overflow:auto;align-items:safe center}
+@media(max-height:500px) and (min-width:651px){.overlay{padding:16px 4%}.panel{max-width:min(620px,90%)}.panel h2{font-size:clamp(28px,4vw,44px);margin:4px 0}.panel p{margin:6px 0;line-height:1.6}}
+/* The chimes hang from a two-post rack; the embroidery frame rests on a sloped stand. */
+#alcove[data-kind=bells] #instruments{position:relative;border-inline:7px ridge #846244;border-bottom:6px ridge #785535;padding-inline:clamp(5px,1.2vw,16px);box-shadow:0 9px 10px -7px #21140c}
+#alcove[data-kind=bells] #instruments:before,#alcove[data-kind=bells] #instruments:after{content:"";position:absolute;bottom:-10px;width:22px;height:5px;background:#68503b;border-top:2px solid #a48256}
+#alcove[data-kind=bells] #instruments:before{left:-13px}#alcove[data-kind=bells] #instruments:after{right:-13px}
+.bronze-bell{clip-path:polygon(41% 0,59% 0,64% 5%,72% 8%,81% 20%,83% 48%,88% 75%,100% 92%,98% 98%,82% 100%,18% 100%,2% 98%,0 92%,12% 75%,17% 48%,19% 20%,28% 8%,36% 5%)}
+#alcove[data-kind=bells] #instruments button:before{content:"";position:absolute;top:0;left:49%;height:18px;border-left:3px solid #b3a279}
+#alcove[data-kind=silk] #instruments{border-bottom-width:12px;box-shadow:0 7px 0 -2px #72583f,0 11px 0 -3px #49382a,0 17px 13px #1d120c80}

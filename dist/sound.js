@@ -134,7 +134,10 @@
         brush(t, 2900, 1500, .09, .18);
         brush(t + .05, 400, 1700, .47, .15, .065);
         tone(t + .12, 196, .46, .029, 220); break;
-      case 'bell': strikeBell(t, 523, .13); break;
+      case 'low': strikeBell(t,330,.12);break;
+        case 'middle': strikeBell(t,440,.12);break;
+        case 'high': strikeBell(t,660,.12);break;
+        case 'bell': strikeBell(t, 523, .13); break;
       case 'step':
         tone(t, (currentStage === 2 ? 133 : 101) * pitch, .09, .086, 55);
         brush(t + .015, currentStage === 2 ? 1900 : 810, 370, .1, .095); break;

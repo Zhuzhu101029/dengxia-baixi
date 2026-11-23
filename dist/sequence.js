@@ -1,15 +1,15 @@
 let beat='',beatTimer=0,beatFrame=0,portraitRole='a';
-function sceneBusy(){return Boolean(s.passage||beat&&beat!=='glimpse')}
+function sceneBusy(){return Boolean(s.alcove||beat&&beat!=='glimpse')}
 function lockStage(locked){
   document.querySelector('.controls').inert=locked;
-  el('object').inert=locked;
+  el('object').inert=locked;el('propCommands').inert=locked;
   el('drawer').inert=locked||!wide||s.role!=='a'||![1,3].includes(s.stage);
 }
 function closePerformance(){
   clearTimeout(beatTimer);cancelAnimationFrame(beatFrame);
   visual.work=null;visual.shot=null;stageNode.classList.remove('model-shot');redrawUntil=performance.now()+900;
   beat='';el('performance').hidden=true;el('performance').classList.remove('glimpse');
-  lockStage(Boolean(s.passage));
+  lockStage(Boolean(s.alcove));
 }
 function paintBeat(kind,progress,role){
   if(draw){
@@ -58,56 +58,6 @@ function lightWick(){
   }
   frame(start);
 }
-function openPassage(target){
-  closePerformance();stopMovement();s.passage=target;save();lockStage(true);
-  const gate=el('passage');gate.hidden=false;gate.dataset.destination=String(target);
-  el('gateTitle').textContent=target===2?'穿过后台角门':'回到旧戏楼';
-  el('gateTask').textContent=target===2?'向右抽出门闩':'向下拉绳，升起门帘';
-  el('enterGate').textContent=target===2?'走上雨桥':'走进戏楼';
-  el('gateRange').value=s.latch;drawGate();el('gateRange').focus({preventScroll:true});
-}
-function drawGate(){
-  const p=s.latch/100,gate=el('passage');
-  gate.style.setProperty('--bolt',p*94+'%');
-  gate.style.setProperty('--hinge',Math.max(0,p-.6)*180+'deg');
-  gate.style.setProperty('--lift',(-p*94)+'%');
-  el('enterGate').disabled=s.latch<98;
-}
-function moveLatch(value){
-  s.latch=Math.max(0,Math.min(100,Math.round(value)));
-  el('gateRange').value=s.latch;drawGate();stageSound.play(s.passage===2?'slide':'turn');save();
-}
-el('gateRange').oninput=e=>moveLatch(+e.target.value);
-const gateHandle=el('passage').querySelector('.barrier');
-let gateDrag=null;
-gateHandle.onpointerdown=e=>{
-  if(!s.passage||e.button!==0||gateDrag)return;
-  e.preventDefault();gateHandle.setPointerCapture(e.pointerId);
-  gateDrag={id:e.pointerId,x:e.clientX,y:e.clientY,base:s.latch};
-};
-gateHandle.onpointermove=e=>{
-  if(!gateDrag||e.pointerId!==gateDrag.id)return;
-  const rect=gateHandle.parentElement.getBoundingClientRect();
-  const delta=s.passage===2?(e.clientX-gateDrag.x)/(.28*rect.width):(e.clientY-gateDrag.y)/(.38*rect.height);
-  moveLatch(gateDrag.base+delta*100);
-};
-gateHandle.onlostpointercapture=gateHandle.onpointerup=gateHandle.onpointercancel=()=>{gateDrag=null};
-// Some touch browsers suppress the compatibility click immediately after a slider drag.
-const enterButton=el('enterGate');
-let gateTap=null;
-enterButton.onpointerdown=e=>{if(e.pointerType==='touch')gateTap={id:e.pointerId,x:e.clientX,y:e.clientY}};
-enterButton.onpointercancel=()=>{gateTap=null};
-enterButton.onpointerup=e=>{
-  const tap=gateTap;gateTap=null;
-  if(tap&&tap.id===e.pointerId&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<9){
-    e.preventDefault();enterButton.click();
-  }
-};
-el('enterGate').onclick=()=>{
-  if(!s.passage||s.latch<98)return;
-  const next=s.passage;s.passage=0;s.latch=0;el('passage').hidden=true;
-  changeStage(next,true);el('action').focus({preventScroll:true});
-};
 el('portrait').onclick=()=>inspectFace(s.role);
 el('otherFace').onclick=()=>inspectFace(portraitRole==='a'?'b':'a');
 el('carry').onclick=()=>{

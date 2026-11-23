@@ -8,7 +8,7 @@
 .toolDrawer.folded{grid-template-rows:0fr;opacity:0;pointer-events:none}
 .toolClip{overflow:hidden;min-height:0}
 @media(prefers-reduced-motion:reduce){.dialog p,.dialog strong,.toolDrawer{transition:none}}
-</style><link rel="stylesheet" href="playhouse.css"></head><body><main class="main"><header><h1>灯下百戏 <i></i><small>借影搭桥</small></h1><div class="header-actions"><button id="sound" aria-pressed="true">声音开</button><button id="reset" title="重置本机游戏进度">重开</button></div></header><section class="stage" aria-label="戏台游戏画面"><svg class="scene" viewBox="0 0 1000 450" preserveAspectRatio="xMidYMid meet" role="img" aria-label="阿照在台前操灯，拾影站在后方影幕的剪影上。">
+</style><link rel="stylesheet" href="playhouse.css"></head><body><main class="main"><header><h1>灯下百戏 <i></i><small>借影搭桥</small></h1><div class="header-actions"><button id="sound" aria-pressed="true">声音开</button><button id="reset" title="重置本机游戏进度">重开</button></div></header><div class="hud"><div class="location"><small id="actNumber"></small><h2 id="place"></h2><span id="chapter"></span></div><span id="role"></span></div><section class="stage" aria-label="戏台游戏画面"><svg class="scene" viewBox="0 0 1000 450" preserveAspectRatio="xMidYMid meet" role="img" aria-label="阿照在台前操灯，拾影站在后方影幕的剪影上。">
 <defs>
 <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#1f1714" stop-opacity=".72"/><stop offset="1" stop-color="#100f0e"/></linearGradient>
 <radialGradient id="warm"><stop stop-color="#ffdf9a" stop-opacity=".8"/><stop offset="1" stop-color="#ffc46b" stop-opacity="0"/></radialGradient>
@@ -28,11 +28,11 @@
 <g id="a"><ellipse rx="19" ry="3" fill="#171612" opacity=".68"/><g id="bodyPose" stroke-linejoin="round"><path d="M-9 -18l-4 17 -7 1 2 2h11l8 -18 M5 -16l4 15 10 1 1 -3 -6 -1 -1 -17" fill="#302724"/><path d="M-7 -55l14 -1 8 13 7 31q-20 5 -42 -1l10 -33z" fill="url(#robe)" stroke="#442e25" stroke-width="2"/><path d="M-6 -53l8 13 6 -13 M-14 -18q15 5 32 0" fill="none" stroke="#e2bc85" stroke-width="2"/><path d="M-10 -48l-12 20 10 3 14 -14 M8 -46l13 13 10 -8 4 6 -15 15 -17 -14" fill="#995b43" stroke="#5e3a2c" stroke-width="2"/><path d="M-8 -67q1 -13 15 -8l5 9 4 4 -4 2q-1 9 -13 6z" fill="#e6bc89"/><path d="M-11 -62q-8 -17 5 -22 15 -3 20 12l-12 -4 -5 9z" fill="#292724"/><circle cx="-11" cy="-80" r="6" fill="#282522"/><path d="M-21 -76l23 -7" stroke="#cb8761" stroke-width="2"/></g></g>
 </g></svg>
 <canvas id="stage3d" aria-label="三维戏台"></canvas><div id="cinema"><div class="backdrop" id="backdrop"></div><div class="vignette"></div><div id="object"></div><div id="crossing" hidden><div class="bank"></div><div class="span"></div><div class="traveller" aria-label="拾影当前位置"><svg viewBox="-40 -78 88 84" aria-hidden="true"><use href="#shadowPose"/></svg></div><div class="destination">铃</div></div></div><section id="performance" hidden aria-label="人物特写"><div id="performFrame"></div><div id="performBar"><strong id="performTitle"></strong><p id="faceLine" hidden></p><label id="carryControl">椅轨 <input id="carryRange" type="range" min="0" max="100"><output id="carryRead"></output></label><button id="otherFace">看拾影</button><button id="leaveBeat">回到戏台</button></div></section>
-<section id="passage" hidden aria-label="场景通道"><div class="beyond"></div><div class="threshold"><div class="leaf west"></div><div class="leaf east"></div><span class="keeper near"></span><span class="keeper far"></span><div class="barrier" aria-hidden="true"></div></div><div class="passControls"><h2 id="gateTitle"></h2><label><span id="gateTask"></span> <input id="gateRange" type="range" min="0" max="100" value="0"></label><button id="enterGate" disabled></button></div></section><div id="shutter" aria-hidden="true"></div><div class="sceneLight" aria-hidden="true"></div><div class="hud"><div class="location"><small id="actNumber"></small><h2 id="place"></h2><span id="chapter"></span></div><span id="role"></span></div><div class="dialog" aria-live="polite"><strong id="speaker"></strong><p id="dialog"></p><div id="projection" hidden aria-label="投影与左右桥墩的对齐情况"><i></i><b></b><em></em></div></div><div class="overlay" id="overlay"><div class="panel"><div class="kicker">北京皮影戏</div><h2>借影搭桥</h2><p>阿照落了门闩，刚把钥匙揣好，幕布后头有人敲了三下。她提着空灯回去。灯盏竟是满的，盏沿还挂着一滴油。</p><button class="primary" id="start">入戏</button><p class="hint">自动保存在当前设备的浏览器中</p></div></div></section><div class="controls"><button id="left">向左</button><button id="right">向右</button><button class="primary" id="action">互动</button><button id="switch">切换角色</button><button id="hint">提示</button><button id="portrait" disabled>人物特写</button><button id="carry" hidden>搬动木椅</button><button id="inspect" hidden>查看匣背</button><button id="view">戏台全景</button></div><div class="toolDrawer folded" id="drawer" inert><div class="toolClip"><section class="tools" id="tools"><strong id="toolTitle"></strong><label id="chairLabel">移动椅子 <input id="chair" type="range" min="0" max="100" value="25"><output id="chairOut"></output></label><label id="lampLabel">调整灯光 <input id="lamp" type="range" min="0" max="100" value="25"><output id="lampOut"></output></label><label id="angleLabel">转动视角 <input id="angle" type="range" min="0" max="100" value="15"><output id="angleOut"></output></label><div class="hint" id="feedback"></div></section></div></div><p class="hint guide" id="guide"></p></main><script src="sound.js"></script><script src="mechanism.js"></script><script src="room.js"></script><script src="stage.js"></script><script>
+<section id="alcove" hidden aria-labelledby="alcoveTitle"><canvas id="alcoveScene" aria-hidden="true"></canvas><div class="alcove-head"><small id="alcoveAct"></small><h2 id="alcoveTitle" tabindex="-1"></h2><p id="alcoveClue"></p></div><div id="instruments"></div><div class="alcove-foot"><p id="alcoveFeedback" aria-live="polite"></p><button id="repeatCue" type="button">再听一遍</button></div></section><div id="shutter" aria-hidden="true"></div><div class="sceneLight" aria-hidden="true"></div><div class="dialog" aria-live="polite"><strong id="speaker"></strong><p id="dialog"></p><div id="projection" hidden aria-label="投影与左右桥墩的对齐情况"><i></i><b></b><em></em></div></div><div class="overlay" id="overlay"><div class="panel"><div class="kicker">北京皮影戏</div><h2>借影搭桥</h2><p>阿照落了门闩，刚把钥匙揣好，幕布后头有人敲了三下。她提着空灯回去。灯盏竟是满的，盏沿还挂着一滴油。</p><button class="primary" id="start">入戏</button><p class="hint">自动保存在当前设备的浏览器中</p></div></div></section><div id="propCommands" aria-label="机关操作"></div><div class="controls"><button id="left">向左</button><button id="right">向右</button><button class="primary" id="action">互动</button><button id="switch">切换角色</button><button id="hint">提示</button><button id="portrait" disabled>人物特写</button><button id="carry" hidden>搬动木椅</button><button id="inspect" hidden>查看匣背</button><button id="view">戏台全景</button></div><div class="toolDrawer folded" id="drawer" inert><div class="toolClip"><section class="tools" id="tools"><strong id="toolTitle"></strong><label id="chairLabel">移动椅子 <input id="chair" type="range" min="0" max="100" value="25"><output id="chairOut"></output></label><label id="lampLabel">调整灯光 <input id="lamp" type="range" min="0" max="100" value="25"><output id="lampOut"></output></label><label id="angleLabel">转动视角 <input id="angle" type="range" min="0" max="100" value="15"><output id="angleOut"></output></label><div class="hint" id="feedback"></div></section></div></div><p class="hint guide" id="guide"></p></main><script src="sound.js"></script><script src="mechanism.js"></script><script src="room.js"></script><script src="stage.js"></script><script>
 'use strict';
 const el=id=>document.getElementById(id);
 const key='dengxia-shadow-v2';
-const initial=()=>({stage:0,role:'a',a:13,b:27,chair:25,lamp:25,angle:15,passage:0,latch:0});
+const initial=()=>({stage:0,role:'a',a:13,b:27,chair:25,lamp:25,angle:15,alcove:"",chimes:0,tiles:[1,3,2]});
 function restore(){
   const state=initial();
   try {
@@ -43,7 +43,12 @@ function restore(){
       if(Number.isFinite(old[k]))state[k]=Math.max(0,Math.min(100,old[k]));
     }
     if((old.passage===2||old.passage===3)&&old.passage===state.stage+1){
-      state.passage=old.passage;state.latch=Number.isFinite(old.latch)?Math.round(Math.max(0,Math.min(100,old.latch))):0;
+      state.stage=old.passage;
+    }
+    if((old.alcove==='bells'&&state.stage===2)||(old.alcove==='silk'&&state.stage===3)){
+      state.alcove=old.alcove;
+      if(Number.isInteger(old.chimes)&&old.chimes>=0&&old.chimes<3)state.chimes=old.chimes;
+      if(Array.isArray(old.tiles)&&old.tiles.length===3&&old.tiles.every(n=>Number.isInteger(n)&&n>=0&&n<4))state.tiles=old.tiles.slice();
     }
     state.a=Math.max(5,Math.min(88,state.a));
     state.b=Math.max(21,Math.min(76,state.b));
@@ -128,8 +133,8 @@ function step(dir,amount){
   if(old!==pos){if(!wide){wide=true;syncImmersion()}el(who).setAttribute('transform','translate('+pos*10+' '+(who==='a'?389:265)+')');redrawUntil=performance.now()+2400}
 
 }
-function changeStage(n,entered=false){
-  if((n===2||n===3)&&!entered){openPassage(n);return}
+function changeStage(n){
+  leaveAlcove();
   closePerformance();
   const stage=el('stage3d').parentElement;
   if(!reduced&&typeof stage.animate==='function'){
@@ -144,9 +149,9 @@ function action(){
   if(!playing)return;
   if(s.stage===0&&s.a<=28)return changeStage(1);
   if(s.stage===1&&s.role==='a'&&isAligned())return changeStage(2);
-  if(s.stage===2&&s.role==='b'&&s.b>=70)return changeStage(3);
+  if(s.stage===2&&s.role==='b'&&s.b>=70)return openAlcove('bells');
   if(s.stage===3&&s.role==='b'&&s.b<=29&&isAligned()){
-    changeStage(4);endCard();return;
+    openAlcove('silk');return;
   }
   stageSound.play("blocked");render(tips[s.stage]);
 }
@@ -157,10 +162,10 @@ function endCard(){
   el('start').textContent='回看戏台';playing=false;if(visual.started)render();window.setTimeout(()=>{if(s.stage===4&&!playing)curtain(true)},reduced?0:2450);
 }
 const card=el('overlay').querySelector('h2').innerHTML,prologue=el('overlay').querySelector('.panel p').textContent;
-el('start').onclick=()=>{stageSound.unlock();stageSound.play("open");playing=true;visual.started=true;wide=!s.stage||s.stage===4||s.role==='b';curtain(false);render();if(s.passage){openPassage(s.passage);return}el('action').focus({preventScroll:true})};
+el('start').onclick=()=>{stageSound.unlock();stageSound.play("open");playing=true;visual.started=true;wide=!s.stage||s.stage===4||s.role==='b';curtain(false);render();if(s.alcove){openAlcove(s.alcove);return}el('action').focus({preventScroll:true})};
 if(s.stage===4)endCard();else if(s.stage)el('start').textContent='继续上回';
 el('action').onclick=action;el('switch').onclick=swap;el('hint').onclick=()=>{if(playing)render(s.stage===1?'椅轨对准 65 刻，灯座对准 55 刻，再扣锁栓。':s.stage===3?'窗棂对准 70 刻，换拾影走回左岸拉铃。':tips[s.stage])};
-el('reset').onclick=()=>{if(!confirm('从后台初遇重新开始？当前存档会被替换。'))return;closePerformance();el('passage').hidden=true;stopMovement();wide=false;visual.dir={a:1,b:1};s=initial();lockStage(false);playing=false;visual.started=false;visual.look=0;visual.pitch=0;visual.motion={a:newMotion(),b:newMotion()};visual.a=s.a;visual.b=s.b;el('overlay').querySelector('h2').innerHTML=card;el('overlay').querySelector('.panel p').textContent=prologue;el('start').textContent='入戏';curtain(true);render();save()};
+el('reset').onclick=()=>{if(!confirm('从后台初遇重新开始？当前存档会被替换。'))return;closePerformance();leaveAlcove();stopMovement();wide=false;visual.dir={a:1,b:1};s=initial();lockStage(false);playing=false;visual.started=false;visual.look=0;visual.pitch=0;visual.motion={a:newMotion(),b:newMotion()};visual.a=s.a;visual.b=s.b;el('overlay').querySelector('h2').innerHTML=card;el('overlay').querySelector('.panel p').textContent=prologue;el('start').textContent='入戏';curtain(true);render();save()};
 for(const k of ['chair','lamp','angle'])el(k).oninput=e=>{
   if(!playing||s.role!=='a')return;
   if(s.stage===3&&s.b>31&&s.b<69){render('拾影还在桥上。先让他走到岸边，再转窗棂。');return}
@@ -231,7 +236,7 @@ function tick(time){
   const keyDir=lastKey?(lastKey==='d'||lastKey==='arrowright'?1:-1):0;
   if(keyDir||held)tapDistance=0;
   const dir=held||keyDir||Math.sign(tapDistance);
-  const walkSpeed=s.role==='a'?5.8:8.4;
+  const walkSpeed=8.4;
   const target=playing&&s.stage<4?dir*walkSpeed:0;
   const reversing=target*speed<0;
   const acceleration=(!dir||reversing)?85:43;
@@ -273,5 +278,5 @@ function tick(time){
   }
   requestAnimationFrame(tick);
 }
-</script><script src="performance.js"></script><script src="sequence.js"></script><script src="playhouse.js"></script><script>render();requestAnimationFrame(tick);
+</script><script src="performance.js"></script><script src="alcoves.js"></script><script src="challenge.js"></script><script src="sequence.js"></script><script src="playhouse.js"></script><script>render();requestAnimationFrame(tick);
 </script></body></html>
