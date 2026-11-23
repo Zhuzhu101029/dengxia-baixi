@@ -1,0 +1,42 @@
+/* Room, stage and camera share the viewport. UI is layered over it. */
+html,body{width:100%;height:100%;overflow:hidden;margin:0}
+.main,.main:not(:has(.stage.in-play)) #gameLayout,#gameLayout,#sceneColumn,#sceneColumn>.stage{position:absolute;inset:0;display:block;width:100%;max-width:none;height:100%;min-height:0;margin:0;padding:0;border:0;border-radius:0}
+.main{height:100dvh;overflow:hidden}
+.main>header,.main>.hud,#gameConsole{display:none!important}
+#gameLayout [hidden],.sceneSheet [hidden]{display:none!important}
+#sceneColumn>.dialog{position:absolute;top:max(3.5%,env(safe-area-inset-top));left:max(3%,env(safe-area-inset-left));right:auto;max-width:min(43ch,calc(100% - 180px));border:0;background:linear-gradient(90deg,#15120de8,#17140ae6 78%,#18150d99);border-left:2px solid #bd905b;padding:9px 14px;display:flex;align-items:baseline;color:#f0e2c6;font-size:15px;line-height:1.5;opacity:0;pointer-events:none;transition:opacity .5s;overflow:hidden;max-height:none;z-index:3}
+#sceneColumn>.dialog.speaking{opacity:1}
+#gameLayout.examining #sceneColumn>.dialog,.main:has(.model-shot) #sceneColumn>.dialog,.main:has(.in-alcove) #sceneColumn>.dialog{display:none}
+#sceneNav{position:absolute;z-index:6;right:max(16px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top));display:flex;gap:6px}
+.symbol,.propPoint,#fieldTouch button{appearance:none;display:grid;place-items:center;color:#f0dcc0;border:1px solid #b79b668a;background:#201b16ac;box-shadow:0 2px 10px #0e0c0a22}
+.symbol{width:42px;height:42px;min-height:0;padding:10px;border-radius:50%}.symbol svg{width:21px;height:21px}
+#sceneProps{position:absolute;inset:0;pointer-events:none;z-index:2}
+.propPoint{pointer-events:auto;position:absolute;transform:translate(-50%,-50%);width:38px;height:38px;padding:0;min-height:0;border-radius:50%;font-size:20px}
+#worldPins button:disabled{visibility:hidden}
+#gameLayout>#evidenceDetail{position:absolute;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom));z-index:5;width:min(580px,calc(100vw - 24px));max-height:47dvh;overflow:auto;display:block;padding:13px 17px;margin:0;border:1px solid #957d54;border-left:3px solid #bc975f;background:#211d16ed}
+#evidenceDetail h2{font-size:20px}#evidenceDetail .caseActions{margin-top:9px}#evidenceDetail #fieldReply{color:#ebc58c}#fieldReply:empty{display:none}
+.sceneSheet{background:#29251e;color:#f5e9cb;border:1px solid #9e8155;box-shadow:0 18px 70px #160f09b3;width:min(485px,calc(100vw - 28px));max-height:78dvh;padding:22px;overflow:auto}
+.sceneSheet::backdrop{background:#100e0b75}.sceneSheet>h2{font-weight:500;font-size:25px;margin:0 47px 16px 0}
+.sceneSheet>.symbol{position:absolute;right:12px;top:12px}.sceneSheet>button:not(.symbol){margin:3px}
+#pack #caseArea{margin:0;padding:0;border:0;background:none}#pack #fieldSites{display:none}#pack .bagRow{display:flex;align-items:flex-start;gap:10px}#pack .bagRow h2{display:none}#caseHistory p{margin:10px 0}
+#fieldTouch{display:none}
+#sceneColumn .stage #alcove{box-sizing:border-box;width:100%;padding:max(22px,4vh) max(18px,5vw);overflow:auto}
+#alcove .alcove-head{max-width:min(48ch,calc(100% - 126px))}
+#sceneColumn .stage #performance{pointer-events:none}#performBar{pointer-events:auto}
+#performBar,#gameLayout #evidenceDetail{padding-bottom:max(14px,env(safe-area-inset-bottom))}
+#sceneColumn .stage #sceneProps{touch-action:none}
+#gameLayout:has(.model-shot) #sceneProps,#gameLayout.examining #sceneProps,#gameLayout:has(.in-alcove) #sceneProps{display:none}
+@media(pointer:coarse){
+ #fieldTouch{display:flex;position:absolute;z-index:4;left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));align-items:flex-end;justify-content:space-between;pointer-events:none}
+ #crossPad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,38px);gap:2px;pointer-events:none}
+ #fieldTouch button{pointer-events:auto;min-height:0;padding:0;touch-action:none;user-select:none;border-radius:9px;font:22px/1 sans-serif}
+ #stepUp{grid-area:1/2}#fieldTouch #left{grid-area:2/1}#fieldTouch #right{grid-area:2/3}#stepDown{grid-area:3/2}
+ #fieldTouch #action{width:63px;height:63px;border-radius:50%;margin:0 3px 10px;align-content:center;gap:2px;background:#493728d9}#action svg{width:23px;height:23px}#action span{font:12px/1.1 sans-serif}#action:disabled{opacity:.5}
+}
+@media(max-width:600px){#sceneNav{top:9px;right:9px;gap:4px}.symbol{width:37px;height:37px;padding:6px}#sceneColumn>.dialog{font-size:14px;max-width:calc(100% - 145px);top:10px;left:8px;padding:5px 8px;gap:5px}
+ #gameLayout>#evidenceDetail{font-size:15px;bottom:8px;padding:9px 10px}
+ #sceneColumn .stage #alcove{padding:65px 12px 12px}#alcove .alcove-head{max-width:100%}}
+@media(max-height:450px){#sceneColumn .stage #alcove{grid-template-rows:auto minmax(60px,1fr) auto;padding:8px 15px;gap:4px}#alcove .alcove-head,#alcove .alcove-foot{padding:4px 10px}#alcove .alcove-head h2{font-size:20px}#alcove .alcove-head p{font-size:14px}
+ #alcove[data-kind=silk] #instruments button{width:clamp(60px,26vh,95px)}#alcove .bronze-bell{height:calc(65px * var(--bell-size))}}
+
+@media(max-height:450px){#alcove .alcove-head{max-width:calc(100% - 96px)}}

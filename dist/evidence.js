@@ -34,7 +34,7 @@ let selectedPieces=[],examining=null,lastKitView='',returnToWide=true;
 const evNode=id=>document.getElementById(id);
 function cluesActive(){return !pendingCut&&!contactRun&&playing&&s.stage>=1&&s.stage<=3&&!s.alcove&&!beat}
 function clueReady(){return !!s.kit[s.stage]?.installed}
-function fieldNote(message){evNode('caseNote').textContent=message}
+function fieldNote(message){evNode('caseNote').textContent=message;const reply=evNode('fieldReply');if(reply)reply.textContent=examining!==null?message:''}
 function markScene(){lastKitView='';redrawUntil=performance.now()+700;syncCase();refreshReach()}
 function startExamine(slot){
   if(!cluesActive()||!nearSite(slot))return;
@@ -142,7 +142,7 @@ function projectClues(coords){
   const placed=[];
   coords.forEach(([x,y,depth],i)=>{
     const btn=holder.children[i],px=x*holder.clientWidth,py=y*holder.clientHeight;
-    btn.hidden=depth<=0||px<20||px>holder.clientWidth-20||py<20||py>holder.clientHeight-20||placed.some(([a,b])=>Math.hypot(a-px,b-py)<42);
+    btn.hidden=(i===2&&clueReady()&&(s.stage===1||s.stage===3))||depth<=0||px<20||px>holder.clientWidth-20||py<20||py>holder.clientHeight-20||placed.some(([a,b])=>Math.hypot(a-px,b-py)<42);
     if(!btn.hidden){placed.push([px,py]);btn.style.left=px+'px';btn.style.top=py+'px'}
   });
 }

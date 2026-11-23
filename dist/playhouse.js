@@ -21,7 +21,7 @@ el('sound').onclick=()=>{
 };
 let previousChair=s.chair;
 function adjustProp(k,v){
-  if(!nearTool(k)||sceneBusy()&&!(k==='chair'&&beat==='chair')){if(el(k))el(k).value=s[k];return}
+  if(!nearTool(k)||sceneBusy()&&!(k==='chair'&&beat==='chair'||k===visual.tuning&&beat==='tune')){if(el(k))el(k).value=s[k];return}
   if((s.stage===1&&!['chair','lamp'].includes(k))||(s.stage===3&&k!=='angle')||![1,3].includes(s.stage))return;
   if(s.stage===3&&s.b>31&&s.b<69){render('等拾影走到岸边，才能转动窗棂。');return}
   const value=Math.max(0,Math.min(100,Math.round(v)));
@@ -64,8 +64,8 @@ function syncImmersion(){
   stageNode.classList.toggle('in-play',playing);
   el('view').textContent=wide?'机关特写':'戏台全景';
   el('view').disabled=!playing;el('inspect').hidden=!playing||wide;
-  el('switch').textContent=s.role==='a'?'换拾影':'换阿照';
-  el('action').textContent=['点灯','固定影桥','拉响铜铃','牵袖拉铃','谢幕'][s.stage];
+  el('switch').setAttribute('aria-label',s.role==='a'?'换拾影':'换阿照');
+
   el('guide').textContent=act[2]+(wide?'　走近物件后可操作。':'　移动时切至戏台全景。');
   el('drawer').style.display=wide?'':'none';
   el('action').disabled=!playing||s.stage===4;

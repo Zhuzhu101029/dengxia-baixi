@@ -119,7 +119,7 @@ function theatre(canvas,software=false) {
     const breath=.009*Math.sin(t*1.8+(opera?1.2:0)),torso=pelvis+breath;
     const greeting=finale;
     for(const sign of [-1,1]){
-      const hip=[sign*.112,pelvis,0],ankle=footTarget(x,sign,facing,weight,opera);
+      const hip=[sign*.112,pelvis,0],ankle=motion.depthWalk?footTarget(z,sign,facing+Math.PI*.5,weight,opera):footTarget(x,sign,facing,weight,opera);
       const axis=unit(sub(ankle,hip)),span=Math.hypot(...sub(ankle,hip));
       const forwardKnee=unit([-axis[0]*axis[2],-axis[1]*axis[2],1-axis[2]**2]);
       const bend=Math.sqrt(Math.max(0,.445**2-span**2/4));
@@ -348,7 +348,7 @@ function theatre(canvas,software=false) {
     let target=[aim,2.02+focus+(visual.pitch||0),0];
     const lampShot=shot?.kind==='lamp',portrait=shot?.kind==='portrait';
     if(portrait){
-      const k=shot.role,x=wx(visual[k]),y=k==='b'?.98:0,z=k==='b'?-.88:1.65;
+      const k=shot.role,x=wx(visual[k]),y=k==='b'?.98:0,z=s.depth[k];
       target=[x,y+1.49,z];eye=[x+.18,y+1.55,z+1.03];
     }else if(lampShot){
       target=[lx+.18,1.21,lz+.16];eye=[lx+1.02,1.52,lz+1.86];
@@ -365,11 +365,21 @@ function theatre(canvas,software=false) {
       target=[x-.27,(y+contact.ground+1.02)*.5,z+.18];
       eye=[x+1.82,contact.ground+1.89,z+2.95];
     }
+    if(visual.tuning){
+      const [x,y,z]=stageProp(visual.tuning==='angle'?'window':'lamp');
+      target=[x,y,z];eye=[x+.80,y+.34,z+2.12];
+    }
     const forward=unit(sub(target,eye)),right=unit(cross(forward,[0,1,0])),up=cross(right,forward);
     visual.pickCoords=anchors.map(p=>{
       const v=sub(p,eye),d=dot(v,forward);return [.5+1.25*h/w*dot(v,right)/d,.5-1.25*dot(v,up)/d,d];
     });
     projectClues(visual.pickCoords);
+    const objects=s.stage===0?['lamp']:s.stage===1?['lamp','chair','lock']:s.stage===2?['bell']:s.stage===3?['window','bell']:[];
+    visual.propHits=objects.map(name=>{
+      const v=sub(stageProp(name),eye),d=dot(v,forward);
+      return {name,x:.5+1.25*h/w*dot(v,right)/d,y:.5-1.25*dot(v,up)/d,d};
+    });
+    positionPropPins(visual.propHits);
     const targetWarmth=[.38,.85,.78,.72,1.05][s.stage];
     warmth=(warmth??targetWarmth)+(targetWarmth-(warmth??targetWarmth))*(1-Math.exp(-dt*2.4));
     finalPose+=((s.stage===4?1:0)-finalPose)*(1-Math.exp(-dt*2));
@@ -475,7 +485,7 @@ function theatre(canvas,software=false) {
     const env=environments.get(room);data=[];
     origin=[0,0,0];yaw=0;
     if(anchors.length){
-      const token={...s.kit[s.stage]};
+      const token={...s.kit[s.stage],angle:s.angle};
       if(contact?.transferred){
         if(contact.kind==='take')token.mask|=1<<contact.slot;
         if(contact.kind==='fit')token.installed=true;
@@ -545,7 +555,7 @@ function theatre(canvas,software=false) {
       if(portrait?shot.role!==k:k==='b'&&(!s.stage||work||lampShot))continue;
       const carrying=k==='a'&&work, lighting=k==='a'&&lampShot;
       const x=lifting?cx-.18*(1-contact.step):contact?contact.point[0]-.19-.38*(1-contact.step):carrying?cx:lighting?lx-.22:wx(visual[k]),y=contact?contact.ground:k==='a'?0:deckY;
-      const zp=lifting?-.40:contact?contact.point[2]+(contact.ground?.31:.43):carrying?-.40:lighting?lz+.30:k==='a'?1.65:z;
+      const zp=lifting?-.40:contact?contact.point[2]+(contact.ground?.31:.43):carrying?-.40:lighting?lz+.30:s.depth[k];
       origin=[x,y+.009,zp];yaw=0;
       for(let j=0;j<12;j++){
         const a=j*Math.PI/6,b=(j+1)*Math.PI/6;

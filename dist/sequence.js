@@ -8,7 +8,7 @@ function lockStage(locked){
 }
 function closePerformance(){
   clearTimeout(beatTimer);cancelAnimationFrame(beatFrame);
-  visual.work=null;visual.shot=null;stageNode.classList.remove('model-shot');redrawUntil=performance.now()+900;
+  visual.tuning=null;visual.work=null;visual.shot=null;stageNode.classList.remove('model-shot');redrawUntil=performance.now()+900;
   beat='';el('performance').hidden=true;el('performance').classList.remove('glimpse');
   lockStage(Boolean(s.alcove));
 }
@@ -52,11 +52,22 @@ el('carry').onclick=()=>playContact(stageProp('chair'),'a',0,()=>{
   openBeat('chair');
   if(draw){visual.work={position:s.chair,height:0,moving:0}}
   el('performTitle').textContent='阿照 · 搬椅';
-  showCarry(s.chair);el('carryRange').focus({preventScroll:true});
+  el('carryCaption').textContent='椅轨';showCarry(s.chair);el('carryRange').focus({preventScroll:true});
 },'lift');
-el('carryRange').oninput=e=>adjustProp('chair',+e.target.value);
-el('leaveBeat').onclick=()=>{const trigger=beat==='chair'?'carry':'portrait';closePerformance();el(trigger).focus({preventScroll:true})};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(beat==='chair'||beat==='portrait'))el('leaveBeat').click()});
+el('carryRange').oninput=e=>{const k=visual.tuning||'chair';adjustProp(k,+e.target.value);el('carryRead').value=s[k]};
+function openTuning(k){
+  if(!nearTool(k)||sceneBusy())return;
+  const name=k==='angle'?'window':'lamp';
+  playContact(stageProp(name),'a',0,()=>{
+    openBeat('tune');visual.tuning=k;visual.shot={kind:'tune',role:'a',progress:0};stageNode.classList.add('model-shot');
+    el('performTitle').textContent=k==='angle'?'旧窗棂':'铜灯座';
+    el('carryCaption').textContent=k==='angle'?'窗轴':'灯轨';
+    el('carryControl').hidden=false;el('carryRange').value=s[k];el('carryRead').value=s[k];
+    el('carryRange').focus({preventScroll:true});redrawUntil=performance.now()+800;
+  });
+}
+el('leaveBeat').onclick=()=>{dissolve(()=>{closePerformance();el('options').focus({preventScroll:true})})};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(beat==='chair'||beat==='tune'||beat==='portrait'))el('leaveBeat').click()});
 
 function advanceCarry(dt){
   const w=visual.work;if(!w)return;

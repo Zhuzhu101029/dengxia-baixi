@@ -135,6 +135,16 @@
       box(c,1.87,cz,1.48,.11,.18,dark);
       box(c,.86,cz,1.34,.105,.15,oak);
       box(c,1.354,cz-.046,1.11,.89,.043,'8b927b');
+      // Brass axle on the front of the frame. Its pointer follows the real detent.
+      const axisX=c+.37,axisY=1.13,axisZ=cz+.20;
+      oval(axisX,axisY,axisZ,.19,.19,.04,dark);
+      for(let i=0;i<=10;i++){
+        const a=Math.PI*(.12+i*.076);
+        limb(axisX+.151*Math.cos(a),axisY+.151*Math.sin(a),axisX+.177*Math.cos(a),axisY+.177*Math.sin(a),.005,axisZ+.03,gilt);
+      }
+      const pointerAngle=Math.PI*(.12+.76*(token.angle??15)/100);
+      limb(axisX,axisY,axisX+.145*Math.cos(pointerAngle),axisY+.145*Math.sin(pointerAngle),.012,axisZ+.047,brass);
+      oval(axisX,axisY,axisZ+.05,.023,.023,.018,gilt);
       for(const dx of [-.38,0,.38])box(c+dx,1.36,cz,.032,.92,.05,oak);
       for(const dy of [1.09,1.63])box(c,dy,cz,1.15,.037,.051,oak);
       panel([[c-.52,1.67],[c+.19,1.67],[c+.13,1.43],[c-.10,1.38],[c-.31,1.18],[c-.52,1.24]],cz+.066,.042,'82534e');

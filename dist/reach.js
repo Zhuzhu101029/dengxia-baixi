@@ -35,11 +35,12 @@ function nearestInteraction(){
   if(!playing||s.stage===4)return null;
   const name=['点灯','固定影桥','拉响铜铃','牵袖拉铃'][s.stage];
   if(nearMain()&&(s.stage!==1||clueReady()))return {name,run:objectAction};
+  if(s.stage===3&&clueReady()&&nearTool('angle'))return {name:'转动窗棂',run:()=>openTuning('angle')};
   if(s.role==='a'&&s.stage>0){
     const i=window.relicSpots(s.stage).findIndex((_,i)=>nearSite(i));
     if(i>=0)return {name:'查看'+evidence[s.stage].sites[i],run:()=>startExamine(i)};
     if(nearTool('chair'))return {name:'搬动木椅',run:()=>el('carry').click()};
-    if(nearTool('lamp'))return {name:'调整灯座',run:()=>{showConsole('tools');el('lamp').focus({preventScroll:true})}};
+    if(nearTool('lamp'))return {name:'调整灯座',run:()=>openTuning('lamp')};
   }
   return null;
 }
@@ -48,7 +49,7 @@ function interactHere(){
 }
 function refreshReach(){
   const local=nearestInteraction(),active=playing&&s.stage<4;
-  el('action').disabled=!local||sceneBusy();el('action').textContent=local?.name||'互动';
+  el('action').disabled=!local||sceneBusy();el('action').setAttribute('aria-label',local?.name||'互动');
   for(const k of ['chair','lamp','angle'])el(k).disabled=!nearTool(k);
   el('carry').disabled=!nearTool('chair');
   el('view').disabled=!playing||wide&&!closeupProp()&&s.stage!==4;
@@ -65,6 +66,7 @@ function refreshReach(){
     }
     const pin=el('worldPins').children[i];if(pin)pin.disabled=!enabled;
   }
+  syncImmersive();
   const names=['灯架','影轨尺座','东岸铜铃','左岸铜铃'];
   const goal=active?stageProp(mainProp())[0]:0;
   el('reachStatus').textContent=!active?'':local?'身旁 · '+local.name:
