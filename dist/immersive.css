@@ -88,3 +88,5 @@ html,body{width:100%;height:100%;overflow:hidden;margin:0}
  #evidenceDetail #handleItem{grid-column:1 / -1;grid-row:1}#evidenceDetail .caseActions button{padding:4px 8px;min-height:36px}
 }
 @media(prefers-reduced-motion:no-preference){.sceneSheet[open]{animation:openCase .15s ease-out}@keyframes openCase{from{opacity:.45;transform:translateY(4px)}to{opacity:1;transform:none}}}
+
+#caseHistory .oldPlaybill{margin:12px 0;padding:10px 13px;background:#383024;color:#f1dfbc;border-inline-start:2px solid #c39960}#caseHistory .oldPlaybill strong{font-weight:600;color:#f2cb91}#caseHistory .oldPlaybill p{line-height:1.55;margin:5px 0}

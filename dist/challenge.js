@@ -34,7 +34,7 @@ function hearScore(){
     },i*650));
   });
   cueTimers.push(setTimeout(()=>{
-    stopCue();el('alcoveFeedback').textContent='轮到你了。已应铃 '+s.chimes+' / 3';
+    stopCue();el('alcoveFeedback').textContent='该报场了。已应铃 '+s.chimes+' / 3';
   },1950));
 }
 function turnPatch(button,i){
@@ -56,7 +56,7 @@ function answerBell(index){
   stopCue();stageSound.play(bells[index].tone);
   const correct=index===bellScore[s.chimes];s.chimes=correct?s.chimes+1:0;
   displayScore();
-  if(s.chimes===3){s.chimes=0;changeStage(3);caption('拾影','等等，有东西掉下来了。这片铜签……谁在边上锉了三道齿？');fieldNote('第三声落下，一枚三齿铜签滑入手中。已放入随身装备。');el('action').focus({preventScroll:true});return}
+  if(s.chimes===3){s.chimes=0;changeStage(3);fieldNote('第三声落下，一枚三齿铜签滑入手中。已放入随身装备。');el('action').focus({preventScroll:true});return}
   el('alcoveFeedback').textContent=correct?'梁上的木簧应了一声。已应铃 '+s.chimes+' / 3':'声音散了。铃腹的刻字记着开场和落板的规矩。';
   save();
 }
@@ -66,7 +66,7 @@ function openAlcove(kind){
   section.hidden=false;section.dataset.kind=kind;section.parentElement.classList.add('in-alcove');
   el('alcoveAct').textContent=isBell?'第二关 · 雨桥内廊':'第三关 · 戏楼后房';
   el('alcoveTitle').textContent=isBell?'听铃阁':'缀袖间';
-  el('alcoveClue').textContent=isBell?'铃架原是给后台报场的。铃腹里留着师父的旧规矩，谁还记得这出戏怎样开场？':'拆下的袖片还夹在绷架里。两枚金针各咬住一截红线，中间那一截去了哪儿？';
+  el('alcoveClue').textContent=isBell?'铃舌回了东岸。每只铃绳都牵着一枚木簧，簧底压着一片铜。拾影说：“报过场，娘就来取它了。”':'拾影的长袖牵响左岸铃，绷架松开了。三片旧袖还留着娘的针孔。把红线接回来，他就能伸手接她下台。';
   el('repeatCue').hidden=!isBell;rack.replaceChildren();el('bellEtching')?.remove();
   if(isBell){
     const plate=document.createElement('div');plate.id='bellEtching';plate.setAttribute('role','img');

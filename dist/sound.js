@@ -61,7 +61,7 @@
     if (!ctx && navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
     try {
       if (!ctx) { createRoom(); buildAmbience(); }
-      if (ctx.state !== 'running') ctx.resume().catch(() => {});
+      if (ctx.state !== 'running') return ctx.resume().catch(() => {});
     } catch { /* Audio may be unavailable in restricted embedded browsers. */ }
   }
 
@@ -120,6 +120,12 @@
     if (t - (lastPlayed.get(name) ?? -1) < (cooldown[name] || .12)) return;
     lastPlayed.set(name, t);
     switch (name) {
+      case 'thimble':
+        for(const delay of [0,.24,.64]){
+          brush(t+delay,1750,700,.043,.12);
+          tone(t+delay,640,.085,.065,435,'triangle');
+        }
+        break;
       case 'tick':
       case 'turn':
         brush(t, 3800, 1100, .028, .14);
@@ -151,7 +157,8 @@
         brush(t, 780, 260, .22, .18, .025);
         tone(t + .15, 172, .12, .087, 90, 'triangle'); break;
       case 'end':
-        [392, 523.25, 587.33, 783.99].forEach((hz, i) => strikeBell(t + i * .22, hz, .068)); break;
+        play('thimble');
+        [392, 523.25, 587.33, 783.99].forEach((hz, i) => strikeBell(t + 1.0 + i * .22, hz, .068)); break;
       case 'swap':
         brush(t, 1800, 620, .22, .095, .035);
         tone(t, 330, .26, .032, 392); break;

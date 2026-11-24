@@ -2,21 +2,21 @@
 const evidence=[
   null,
   {sites:['木工案','账夹','影轨尺座'], pieces:['椅纹断尺','灯纹断尺','双纹校尺'],
-   findings:['刨花里露出半截竹尺。椅背形的烙印旁，划着六道长痕和一道半痕。断口往左缺了一牙。',
-     '账纸夹着一截薄竹。油灯烙印旁是五道长痕和一道半痕。纸边的小字说，这家铺子的长痕一律算十刻。',
+   findings:['半截竹尺刻着椅背，六道长痕带个半痕。拾影说：“师父每回搬椅，都要拿它贴一下椅脚。”',
+     '“过桥”那页账里夹着另一半竹尺，灯纹下五长半。纸角写着“一长十刻”。断口凸出一牙，正好配一个缺口。',
      '轨槽两侧各有半个燕尾口。槽里木色发白，像有一件东西在这儿嵌了许多年。'],
    joined:'两个断口咬上了。椅纹下是六长半，灯纹下是五长半，尺背的小字说一长抵十刻。',
-   fitted:'校尺卡进轨槽，椅纹朝着椅轨，灯纹朝着灯座。两边的刻度终于有了来处。',
+   fitted:'校尺贴平了。椅纹记桥头，灯纹记桥尾。尺背还有四个字：“东岸应铃”。师父连拾影该在哪儿停步都记下了。',
    blocked:'锁栓一压就偏。尺座两边的燕尾口还空着。'},
   {sites:['船匠工具盘','绕线辘轳','东岸铃架'],pieces:['穿孔铜舌','一截蜡绳','系绳铃舌'],
-   findings:['盘底的铜坠一头磨得发亮，一头穿孔。敲一敲，有点像方才桥下的回声。','辘轳上剩了一截绳，抹过蜡，头上有两股拧痕。桥风吹过，也散不开。','铃腹空着。往上摸，里面只有一道磨圆了的吊环。'],
+   findings:['盘底的铜坠刻着一个“东”字。拾影拿指节轻敲了一下：“就是它。那晚我走过去，铃铛张着嘴，一点声儿也没有。”','辘轳上还绕着换铃舌用的蜡绳。阿照搓了搓绳头，两股拧痕，恰能穿进一只小孔。','铃腹空着。往上摸，里面只有一道磨圆了的吊环。'],
    joined:'蜡绳穿过铜舌，铜坠悬垂下来。空出的绳套正好搭在一根小指上。',
-   fitted:'铃舌系稳了。铃腹内沿刻着旧戏班的规矩：头一声要沉，末一声要脆，三只铃各应一次。',
+   fitted:'铃舌系稳了。铃腹里刻着报场的次序：起声沉，收声脆，三铃各应一回。拾影低声说：“娘，听得见吗？”',
    blocked:'拾影扯动铃绳，只有吊环撞木头的声音。'},
   {sites:['针插','戏衣箱','断穗绣框'],pieces:['细钩针','朱砂线','穿线钩针'],
-   findings:['针插上斜着一枚小钩针。针尖往里弯，针尾的长孔里还沾着一点红蜡。','箱盖内侧压着一缕朱线。拾影捻了捻：“我娘收针，总是把这一寸藏起来。”','窗口压着半截断穗，手指够不到。绣框边的小孔透出一点红。'],
+   findings:['针插上斜着一枚小钩针。针尖往里弯，针尾的长孔里还沾着一点红蜡。','箱盖里压着一缕朱线，跟门缝里那张戏单上粘的一样。线尾留了一寸，刚好够穿针。','窗口压着半截断穗，手指够不到。绣框边的小孔透出一点红。'],
    joined:'朱线穿进针尾，针钩还能伸进一指宽的窄缝。',
-   fitted:'钩针穿过小孔，挑回半截穗子。穗根露出七个结，窗轴铜圈上每十刻也有一个结纹。',
+   fitted:'钩针挑出了断穗。穗根七个结，窗轴每十刻也刻一个结。拾影记起来了：“转回窗影，我就能回左岸。那根铃绳连着娘的绷架。”',
    blocked:'袖口挂在断穗里。纱缝太窄，光拉铃绳只会越扯越紧。'}
 ];
 function freshCase(){return [null,...Array.from({length:3},()=>({mask:0,made:false,installed:false}))]}
@@ -69,7 +69,7 @@ function changeItem(slot){
     fieldNote(selectedPieces.length?'接口合不上。手里的物件仍在装备区。':'先在装备区选一件，再试这处接口。');stageSound.play('blocked');return;
   }
   playContact(window.relicSpots(s.stage)[slot],s.role,0,()=>{
-  if(chest){row.opened=true;selectedPieces=[];fieldNote('铜签在三齿扣里转了半圈。箱盖一松，底下压着一卷朱线。');stageSound.play('open')}
+  if(chest){row.opened=true;selectedPieces=[];fieldNote('铜签一转，箱盖开了。里头是娘留的字：“铃若不响，我就拿顶针敲三下。听见就把袖子递来。”');stageSound.play('open')}
   else if(slot<2){
     if(row.mask&(1<<slot))return;
     row.mask|=1<<slot;stageSound.play('open');
@@ -136,6 +136,15 @@ function syncCase(){
   if(!slots.length)bag.textContent=row?.installed?'本关物件已装入机关。':s.stage===4?'三处机关都已复原。':'装备区暂空。调查场景中的物件可以收下线索。';
   evNode('combine').hidden=slots.length<2;evNode('combine').disabled=selectedPieces.length!==2;
   const journal=evNode('caseHistory');journal.replaceChildren();
+  // The same playbill acquires a handwritten line after each played scene.
+  const bill=document.createElement('section');bill.className='oldPlaybill';
+  const title=document.createElement('strong');title.textContent='旧戏单 · 借影搭桥';bill.append(title);
+  const cue=document.createElement('p');cue.textContent='小生过桥，接娘下台。';bill.append(cue);
+  const memories=['开灯　拾影记得袖子被扯住的那一刻。阿照提灯，陪他重走。','过桥　椅影落稳。尺背指向东岸。拾影要去那里补上当年没响的报场铃。','应铃　三声报场铃放出铜签。拾影认出，那是娘的戏衣箱钥匙。','谢幕　断袖接好。顶针敲过三下，拾影终于接住了娘的手。'];
+  for(const memory of memories.slice(0,s.stage)){
+    const p=document.createElement('p');p.textContent=memory;bill.append(p);
+  }
+  journal.append(bill);
   for(let chapter=1;chapter<=Math.min(s.stage,3);chapter++){
     const r=s.kit[chapter],entry=evidence[chapter];
     for(let i=0;i<2;i++)if(r.mask&(1<<i)){
@@ -143,8 +152,9 @@ function syncCase(){
     }
     if(r.made||r.installed){const p=document.createElement('p');p.textContent=entry.pieces[2]+' · '+(r.installed?entry.fitted:entry.joined);journal.append(p)}
   }
+  if(s.kit[3].opened&&s.stage>=3){const p=document.createElement('p');p.textContent='箱盖内的字 · “铃若不响，我就拿顶针敲三下。听见就把袖子递来。”';journal.append(p)}
   if(s.stage>=3){const p=document.createElement('p');p.textContent='三齿铜签 · 雨桥最后一声铃响，铃架吐出一片薄铜，边缘有三道齿。';journal.append(p)}
-  if(!journal.childElementCount)journal.textContent='这里会留下你亲自查到的痕迹。';
+
 }
 function projectClues(coords){
   const holder=evNode('worldPins');if(holder.hidden)return;
