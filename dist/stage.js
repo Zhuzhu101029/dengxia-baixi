@@ -42,6 +42,10 @@ function theatre(canvas,software=false) {
       float side=max(0.,dot(n,normalize(vec3(-.57,.74,.45))));
       float rim=cloth*.09*pow(1.-abs(dot(n,normalize(eye-world))),2.);
       vec3 finish=pigment*(vec3(.57,.62,.66)+side*.39+max(0.,n.y)*.09-rim);
+      // A broad reflected highlight describes the curved profile of foreground pieces.
+      vec3 viewDir=normalize(eye-world), halfway=normalize(viewDir+normalize(vec3(-.55,.82,.62)));
+      float sheen=pow(max(0.,dot(n,halfway)),18.);
+      finish+=(1.-timber)*(.026+.042*cloth)*sheen*vec3(1.,.86,.69);
       if(timber>.5 && printed>.5 && world.z>-2.99 && world.z< -2.925 && abs(world.x)<3.53 && world.y>.80 && world.y<4.29){
         finish=texture2D(wallPrint,vec2((world.x+3.53)/7.06,(4.29-world.y)/3.49)).rgb*.97;
       }
@@ -93,6 +97,40 @@ function theatre(canvas,software=false) {
   function tri(a,b,c,col){if(!colors.has(col))colors.set(col,[0,2,4].map(i=>parseInt(col.slice(i,i+2),16)/255));let normal=unit(cross(sub(b,a),sub(c,a)));for(const pt of [a,b,c])data.push(...pt,...normal,...colors.get(col))}
   function face(a,b,c,d,col){tri(a,b,c,col);tri(a,c,d,col)}
   function box(x,y,z,w,h,d,col){let pts=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1],[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]].map(([a,b,c])=>point(x+a*w/2,y+b*h/2,z+c*d/2));for(const f of [[0,1,2,3],[1,5,6,2],[3,2,6,7],[4,0,3,7],[5,4,7,6],[4,5,1,0]])face(...f.map(i=>pts[i]),col)}
+  // Rounded furniture retains its original outer dimensions and contact surfaces.
+  const edgeProfiles=new Map();
+  function roundedBox(x,y,z,w,h,d,col,radius=.025){
+    const r=Math.min(radius,w*.40,h*.40,d*.40);
+    const key=[w,h,d,r].join('/');
+    let profile=edgeProfiles.get(key);
+    if(!profile){
+      const rings=[];
+      for(const [height,angle] of [[-h/2+r,-Math.PI/2],[-h/2+r,-Math.PI/4],[-h/2+r,0],[h/2-r,0],[h/2-r,Math.PI/4],[h/2-r,Math.PI/2]]){
+        const ring=[];
+        for(let corner=0;corner<4;corner++){
+          const sx=corner===0||corner===3?1:-1,sz=corner<2?1:-1;
+          for(let j=0;j<=3;j++){
+            const a=(corner+j/3)*Math.PI/2;
+            const nx=Math.cos(a)*Math.cos(angle),nz=Math.sin(a)*Math.cos(angle),ny=Math.sin(angle);
+            ring.push([sx*(w/2-r)+r*nx,height+r*ny,sz*(d/2-r)+r*nz,nx,ny,nz]);
+          }
+        }
+        rings.push(ring);
+      }
+      profile=[];
+      for(let j=0;j<16;j++){
+        const k=(j+1)%16;
+        for(let i=1;i<rings.length;i++){
+          const lo=rings[i-1],hi=rings[i];profile.push(lo[j],hi[j],hi[k],lo[j],hi[k],lo[k]);
+        }
+        profile.push([0,-h/2,0,0,-1,0],rings[0][j],rings[0][k],[0,h/2,0,0,1,0],rings[5][k],rings[5][j]);
+      }
+      edgeProfiles.set(key,profile);
+    }
+    if(!colors.has(col))colors.set(col,[0,2,4].map(i=>parseInt(col.slice(i,i+2),16)/255));
+    const rgb=colors.get(col),c=Math.cos(yaw),sn=Math.sin(yaw),center=point(x,y,z);
+    for(const [u,v,w0,nx,ny,nz] of profile)data.push(center[0]+c*u+sn*w0,center[1]+v,center[2]-sn*u+c*w0,c*nx+sn*nz,ny,-sn*nx+c*nz,...rgb);
+  }
   function panel(coords,z,depth,col){let a=coords.map(([x,y])=>point(x,y,z+depth/2)),b=coords.map(([x,y])=>point(x,y,z-depth/2));for(let i=1;i<a.length-1;i++){tri(a[0],a[i],a[i+1],col);tri(b[0],b[i+1],b[i],col)}for(let i=0;i<a.length;i++){let j=(i+1)%a.length;face(a[i],b[i],b[j],a[j],col)}}
   function oval(x,y,z,rx,ry,depth,col){panel(Array.from({length:16},(_,i)=>[x+rx*Math.cos(i*Math.PI/8),y+ry*Math.sin(i*Math.PI/8)]),z,depth,col)}
   function limb(x,y,ex,ey,r,z,col){const d=Math.hypot(ex-x,ey-y)||1,dx=-(ey-y)*r/d,dy=(ex-x)*r/d;panel([[x+dx,y+dy],[x-dx,y-dy],[ex-dx,ey-dy],[ex+dx,ey+dy]],z,r*1.6,col)}
@@ -120,8 +158,19 @@ function theatre(canvas,software=false) {
   function bone(start,end,r1,r2,color){
     const a=point(...start),b=point(...end),axis=unit(sub(b,a));
     const side=unit(cross(axis,Math.abs(axis[0])>.87?[0,0,1]:[1,0,0])),front=cross(axis,side);
-    const at=(p,r,j)=>p.map((v,k)=>v+r*(side[k]*Math.cos(j*Math.PI/4)+front[k]*Math.sin(j*Math.PI/4)));
-    for(let j=0;j<8;j++)face(at(a,r1,j),at(a,r1,j+1),at(b,r2,j+1),at(b,r2,j),color);
+    const count=r1>.047?16:8, length=Math.hypot(...sub(b,a))||1;
+    if(!colors.has(color))colors.set(color,[0,2,4].map(i=>parseInt(color.slice(i,i+2),16)/255));
+    const rgb=colors.get(color);
+    const lo=[],hi=[];
+    for(let j=0;j<count;j++){
+      const angle=2*Math.PI*j/count,radial=side.map((v,i)=>v*Math.cos(angle)+front[i]*Math.sin(angle));
+      const normal=unit(radial.map((v,i)=>v+axis[i]*(r1-r2)/length));
+      lo.push([...a.map((v,i)=>v+r1*radial[i]),...normal,...rgb]);
+      hi.push([...b.map((v,i)=>v+r2*radial[i]),...normal,...rgb]);
+    }
+    for(let j=0;j<count;j++){
+      const k=(j+1)%count;data.push(...lo[j],...lo[k],...hi[k],...lo[j],...hi[k],...hi[j]);
+    }
   }
   // Derive contacts from world distance. Within a stance interval the toe anchor
   // stays at one world point even while the torso turns or the player reverses.
@@ -140,11 +189,48 @@ function theatre(canvas,software=false) {
       .102+.145*Math.sin(Math.PI*u)**2*weight,
       Math.sin(facing)*dx+Math.cos(facing)*dz];
   }
+  // Keep stance feet on the floor in world coordinates. Only the lifted foot
+  // travels, including the short recovery steps after stopping or turning.
+  const gaits=new Map();
+  function walkFeet(role,x,z,facing,time){
+    const c=Math.cos(facing),sn=Math.sin(facing);
+    const rest=[-1,1].map(k=>[x+k*.12*c,z-k*.12*sn]);
+    let g=gaits.get(role);
+    if(!g||time<g.time||Math.hypot(x-g.x,z-g.z)>.58||time-g.time>1){
+      g={feet:rest.map(pt=>pt.slice()),x,z,time,step:null,last:1};
+      gaits.set(role,g);
+    }
+    const dt=Math.max(.001,time-g.time),vx=(x-g.x)/dt,vz=(z-g.z)/dt;
+    const speed=Math.hypot(vx,vz),heights=[0,0];
+    if(!g.step){
+      const errors=rest.map((pt,i)=>Math.hypot(pt[0]-g.feet[i][0],pt[1]-g.feet[i][1]));
+      const other=1-g.last;
+      const i=errors[other]>.024?other:1-other;
+      if(errors[i]>(speed>.03?.105:.024)){
+        const lead=Math.min(.19,.17/Math.max(.01,speed));
+        g.step={i,start:time,from:g.feet[i].slice(),to:[rest[i][0]+vx*lead,rest[i][1]+vz*lead],duration:speed>.03?.205:.18};
+      }
+    }
+    if(g.step){
+      const {i,from,to,start,duration}=g.step;
+      const f=Math.min(1,(time-start)/duration),u=f*f*(3-2*f);
+      g.feet[i]=from.map((v,j)=>v+(to[j]-v)*u);
+      heights[i]=Math.min(.105,Math.hypot(to[0]-from[0],to[1]-from[1])*.42)*Math.sin(Math.PI*f)**2;
+      if(f===1){g.last=i;g.step=null}
+    }
+    if(g.step || rest.some((pt,i)=>Math.hypot(pt[0]-g.feet[i][0],pt[1]-g.feet[i][1])>.024))
+      redrawUntil=Math.max(redrawUntil,time*1000+260);
+    g.x=x;g.z=z;g.time=time;
+    return g.feet.map(([fx,fz],i)=>[c*(fx-x)-sn*(fz-z),.102+heights[i],sn*(fx-x)+c*(fz-z)]);
+  }
   function actor(x,y,z,opera,motion,facing,t,sleeve,finale,grip=null,wick=null,touch=null){
     const {phase,weight}=motion, skin=opera?'eac9b1':'c99776',hair='302a29';
-    const coat=opera?'446c77':'344154', sleeveColor=opera?'527d83':'45536a',hem=opera?'b88e5c':'61443b';
+    const coat=opera?'326e73':'334762', sleeveColor=opera?'579391':'506682',hem=opera?'b47743':'6e4346';
     origin=[x,y,z];yaw=facing;
-    const pelvis=.88+.025*weight*Math.cos(2*phase)-(grip?.bend||0)-(touch?.reach||0)*.055;
+    const freeWalk=!grip&&!touch&&wick===null;
+    const feet=freeWalk?walkFeet(opera,x,z,facing,t):null;
+    if(!freeWalk)gaits.delete(opera);
+    const pelvis=.88-.011*weight*(1-Math.cos(2*phase))-(grip?.bend||0)-(touch?.reach||0)*.055;
     const breath=.009*Math.sin(t*1.8+(opera?1.2:0)),torso=pelvis+breath;
     const greeting=finale;
     for(const sign of [-1,1]){
@@ -156,6 +242,8 @@ function theatre(canvas,software=false) {
         const phase=step-Math.floor(step), swing=Math.max(0,(phase-.5)*2);
         const planted=(Math.floor(step)+.25-offset+eased(swing))*stride;
         ankle=[sign*.18-(planted-x)*weight,.102+.07*Math.sin(Math.PI*swing)**2*weight,0];
+      }else if(feet){
+        ankle=feet[sign<0?0:1];
       }else{
         ankle=motion.depthWalk?footTarget(z,sign,facing+Math.PI*.5,weight,opera):footTarget(x,sign,facing,weight,opera);
         ankle[0]=sign*.12+(ankle[0]-sign*.12)*weight;
@@ -163,7 +251,9 @@ function theatre(canvas,software=false) {
       }
       const axis=unit(sub(ankle,hip)),span=Math.hypot(...sub(ankle,hip));
       const forwardKnee=unit([-axis[0]*axis[2],-axis[1]*axis[2],1-axis[2]**2]);
-      const bend=Math.sqrt(Math.max(0,.445**2-span**2/4));
+      // Resting hip-to-ankle distance is .778. A slight forward bias
+      // keeps the relaxed knee just off lock without forcing a permanent squat.
+      const bend=Math.sqrt(Math.max(.012**2,.3895**2-span**2/4));
       const knee=hip.map((v,i)=>(v+ankle[i])/2+forwardKnee[i]*bend);
       const reach=ankle[2]/.32;
       bone(hip,knee,.093,.075,'413c3a');bone(knee,ankle,.078,.056,opera?'393a3c':'494342');
@@ -201,6 +291,10 @@ function theatre(canvas,software=false) {
         const bend=Math.sqrt(Math.max(0,.30*.30-span*span/4));
         for(let i=0;i<3;i++)elbow[i]=(hand[i]+shoulder[i])/2+out[i]*bend;
       }
+      // Rounded sleeve heads and elbow folds bridge both segments as the arm bends.
+      for(const [joint,r] of [[shoulder,.108],[elbow,.096]]){
+        shape(joint[0],joint[1],joint[2],[[-r,.001,.001],[-r*.65,r*.76,r*.76],[0,r,r],[r*.65,r*.76,r*.76],[r,.001,.001]],sleeveColor,16);
+      }
       bone(shoulder,elbow,.112,.098,sleeveColor);bone(elbow,hand,.098,opera?.105:.068,sleeveColor);
       const cuff=hand.map((v,k)=>v+(elbow[k]-v)*.12);
       bone(cuff,hand,opera?.107:.071,opera?.107:.071,opera?'e9d7b5':hem);
@@ -227,8 +321,8 @@ function theatre(canvas,software=false) {
       if(opera&&sleeve&&sign>0)bone(hand,[hand[0]+.028,hand[1]-.226,hand[2]-.09*weight],.08,.055,'ebddbe');
     }
     const robe=[[opera?-.50:-.31,.30,.19],[0,.209,.149],[.13,.175,.13],[.37,.22,.158],[.46,.224,.146],[.51,.135,.103],[.52,.084,.087]];
-    shape(0,torso,0,robe,coat,16,.038);
-    shape(0,torso,0,[[robe[0][0],.304,.194],[robe[0][0]+.033,.30,.192]],hem,16,.038);
+    shape(0,torso,0,robe,coat,28,.022);
+    shape(0,torso,0,[[robe[0][0],.304,.194],[robe[0][0]+.033,.30,.192]],hem,28,.022);
     shape(0,torso,0,[[.09,.196,.147],[.157,.182,.144]],opera?'bba06e':'493b35',16);
     // The player's moving costume carries its trim on the garment surface.
     for (const side of [-1,1]) {
@@ -237,6 +331,16 @@ function theatre(canvas,software=false) {
         const h=robe[0][0]+.068+j*.038, x=side*(.121+.014*Math.sin(j*1.6));
         bone([x,torso+h,.171],[x+side*.029,torso+h+.017,.165],.005,.004,border);
       }
+    }
+    // Dyed silk binding, a narrow inner piping and the woven waist tie.
+    shape(0,torso,0,[[.102,.197,.148],[.119,.192,.148]],opera?'933f40':'406a68',24);
+    shape(0,torso,0,[[.145,.184,.145],[.154,.183,.145]],opera?'ecbd70':'ad9d79',24);
+    const edgeY=robe[0][0];
+    shape(0,torso,0,[[edgeY+.040,.298,.189],[edgeY+.052,.295,.188]],opera?'e6bc7c':'879888',28,.018);
+    const backTrim=opera?'be965e':'697e87';
+    for(const dir of [-1,1]){
+      bone([0,torso+.387,-.164],[dir*.09,torso+.417,-.151],.007,.007,backTrim);
+      bone([dir*.09,torso+.417,-.151],[dir*.165,torso+.452,-.107],.007,.005,backTrim);
     }
     const sash=opera?'dbc79d':'ac896b';
     const collar=[[-.076,.506,.083],[-.058,.476,.144],[-.020,.417,.166],[.052,.336,.163],[.113,.250,.130]];
@@ -254,7 +358,17 @@ function theatre(canvas,software=false) {
          [.131,.110,.110,.005],[.172,.112,.104],[.218,.105,.102],[.271,.082,.091],[.286,.018,.032]]
       : [[0,.047,.063,.022],[.027,.086,.084,.016],[.060,.111,.099,.012],
          [.103,.133,.111,.008],[.148,.136,.109],[.198,.129,.108],[.236,.098,.091],[.256,.030,.031]];
-    shape(0,head,0,outline,skin,20);
+    shape(0,head,0,outline,skin,32);
+    // A continuous rear hairline follows the skull down to the nape.
+    if(!opera){
+      for(let i=3;i<outline.length-1;i++)for(let j=0;j<16;j++){
+        function lock(layer,index){
+          const [h,rx,rz,shift=0]=outline[layer],a=Math.PI+Math.PI*index/16;
+          return point((rx+.002)*Math.cos(a),head+h+(layer===3?.045*Math.abs(Math.cos(a)):0),shift+(rz+.003)*Math.sin(a));
+        }
+        face(lock(i,j),lock(i+1,j),lock(i+1,j+1),lock(i,j+1),hair);
+      }
+    }
     function faceDepth(x,y){
       let j=1;
       while(j<outline.length-1&&outline[j][0]<y)j++;
@@ -588,7 +702,10 @@ function theatre(canvas,software=false) {
         if(contact.kind==='fit')token.installed=true;
         if(contact.kind==='unlock')token.opened=true;
       }
-      window.drawRelics(s.stage,token,{box,shape,limb,oval,panel});
+      window.drawRelics(s.stage,token,{box:(x,y,z,w,h,d,c)=>{
+        if(Math.min(w,h,d)>=.045)roundedBox(x,y,z,w,h,d,c,.014);
+        else box(x,y,z,w,h,d,c);
+      },shape,limb,oval,panel});
     }
     const left=wx(33),rightEnd=wx(67),z=-.88,deckY=.98;
     function deck(lo,hi){box((lo+hi)/2,deckY-.11,z,hi-lo,.22,.75,'504138');box((lo+hi)/2,deckY-.035,z+.38,hi-lo,.047,.03,'d3a975')}
@@ -617,19 +734,36 @@ function theatre(canvas,software=false) {
     const lift= lifting?.085*eased((contact.progress-.48)/.14)*(1-eased((contact.progress-.68)/.12)):0;
     const chairHeight=work?work.height:lift||0;
     origin=[cx,chairHeight,.24];yaw=Math.PI;
-    for(let x of [-.29,.29])for(let z of [-.25,.25])box(x,.27,z,.085,.54,.085,'583c2e');
-    box(0,.56,0,.72,.12,.64,'ab7650');for(let x of [-.29,.29])box(x,.91,-.25,.075,.74,.08,'80573d');box(0,1.20,-.25,.66,.14,.09,'a9784f');origin=[0,0,0];yaw=0;
-    // A portable lamp is bolted to a vertical backboard and hooked to its bracket.
-    box(lx,.065,lz,.49,.13,.46,'797369');box(lx,.91,lz,.24,1.72,.15,'644936');
-    box(lx+.19,1.72,lz,.57,.09,.13,'76553c');
-    limb(lx,1.42,lx+.34,1.69,.034,lz,'946b44');
-    box(lx+.42,1.62,lz,.036,.17,.04,'a38250');
-    box(lx+.42,1.51,lz,.35,.08,.36,'65462f');
-    box(lx+.42,1.28,lz,.29,.39,.30,wickLit?'efac59':'776f60');
-    box(lx+.42,1.08,lz,.33,.05,.34,'65462f');
-    for(const dx of [-.14,.14])for(const dz of [-.146,.146])
-      box(lx+.42+dx,1.28,lz+dz,.025,.39,.025,'6c4933');
-    box(lx+.42,1.16,lz+.157,.27,.022,.02,'80583a');
+    for(const x of [-.29,.29])for(const z of [-.25,.25]){
+      shape(x,0,z,[[0,.035,.035],[.025,.041,.041],[.085,.032,.032],[.45,.040,.040],[.54,.042,.042]],'674932',16);
+    }
+    roundedBox(0,.56,0,.72,.12,.64,'ab7650',.045);
+    for(const x of [-.29,.29]){
+      roundedBox(x,.91,-.25,.075,.74,.08,'80573d');
+      bone([x,.18,-.25],[x,.18,.25],.021,.021,'78543b');
+    }
+    roundedBox(0,1.20,-.25,.66,.14,.09,'a9784f',.038);
+    roundedBox(0,.90,-.25,.13,.56,.049,'865b40',.021);
+    origin=[0,0,0];yaw=0;
+    // The ribbed silk shade meets the bracket at the cap; the wick remains at its original height.
+    roundedBox(lx,.065,lz,.49,.13,.46,'797369',.05);roundedBox(lx,.91,lz,.24,1.72,.15,'644936');
+    roundedBox(lx+.19,1.72,lz,.57,.09,.13,'76553c');
+    bone([lx,1.42,lz],[lx+.34,1.69,lz],.034,.029,'946b44');
+    bone([lx+.42,1.51,lz],[lx+.42,1.72,lz],.020,.017,'a38250');
+    const shell=[[0,.083,.094],[.035,.126,.135],[.10,.146,.149],[.21,.15,.15],[.30,.14,.14],[.365,.123,.130],[.39,.08,.09]];
+    shape(lx+.42,1.085,lz,shell,wickLit?'edb86c':'887b64',32);
+    // The lower dyed silk and patinated collars remain distinct at night.
+    shape(lx+.42,1.085,lz,[[.036,.127,.136],[.063,.137,.144],[.088,.144,.149]],wickLit?'d48254':'996955',32);
+    shape(lx+.42,1.085,lz,[[.302,.142,.142],[.322,.138,.139]],wickLit?'e9a65e':'b28a68',32);
+    for(let i=0;i<8;i++){
+      const a=i*Math.PI/4;
+      const rib=shell.map(([h,rx,rz])=>[lx+.42+rx*Math.cos(a),1.085+h,lz+rz*Math.sin(a)]);
+      for(let j=1;j<rib.length;j++)bone(rib[j-1],rib[j],.005,.005,'896440');
+    }
+    for(const y of [1.077,1.475]){
+      shape(lx+.42,y,lz,[[0,.075,.075],[.012,.111,.111],[.026,.109,.109],[.038,.074,.074],[.039,0,0]],'68857a',24);
+      shape(lx+.42,y+.013,lz,[[0,.112,.112],[.007,.112,.112]],'d3af73',24);
+    }
     const side=s.stage>=3?1:0;
     bellSide=(bellSide??side)+(side-(bellSide??side))*(1-Math.exp(-4.3*dt));
     for(const [gx,level] of [[wx(74),1-bellSide],[wx(25),bellSide]]){
@@ -643,7 +777,7 @@ function theatre(canvas,software=false) {
       box(gx,2.17,bellZ,.09,.11,.16,'806246');
       const drop=contact?.kind==='pull'?contact.pull:0;
       box(gx,1.995-drop/2,bellZ,.042,.32+drop,.042,'b99455');
-      shape(gx,1.69-drop,bellZ,[[0,.13,.13],[.04,.115,.115],[.13,.078,.078],[.16,.044,.044]],'bb9758');
+      shape(gx,1.69-drop,bellZ,[[0,.13,.13],[.04,.115,.115],[.13,.078,.078],[.16,.044,.044]],'bb9758',28);
       box(gx,1.64-drop,bellZ,.032,.14,.033,'c7a263');
       oval(gx,1.56-drop,bellZ,.055,.056,.05,'e5c283');
     }

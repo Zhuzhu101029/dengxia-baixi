@@ -41,6 +41,8 @@
       const outline=[[-half,0],[half-.07,0],[half-.07,.041],[half,.041],
         [half,.152],[-half,.152]];
       panel(outline.map(([a,b])=>[x+(chair?a:-a),y+b]),z,.058,chair?'bd9059':'d3a874');
+      // Faded lacquer along the shoulder of each scale distinguishes the pair in close-up.
+      box(x,y+.020,z+.031,w-.046,.016,.004,chair?'885345':'42716d');
       const count=chair?6:5;
       for(let i=0;i<=count;i++){
         const len=i===count?.038:.079;
@@ -69,6 +71,7 @@
     function rackBell(x,base,z,mult,sounding){
       shape(x,base,z,[[0,.23,.19],[.045,.22,.18],[.09,.185,.154],[.30,.142,.12],[.37,.065,.063],[.39,.038,.038]].map(r=>r.map(v=>v*mult)),brass,12);
       shape(x,base+.046*mult,z,[[0,.221*mult,.182*mult],[.017,.213*mult,.174*mult]],gilt,12);
+      shape(x,base+.22*mult,z,[[0,.159*mult,.133*mult],[.026*mult,.156*mult,.129*mult]],jade,24);
       if(sounding)clapper(x,base-.11*mult,z,.45*mult);
     }
     function hook(x,y,z,scale){

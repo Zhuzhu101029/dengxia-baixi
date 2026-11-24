@@ -128,16 +128,23 @@
       const b=Math.min(bevel,w/5,h/3,d/5);
       const ring=(shrink,yy)=>{
         const a=w/2-shrink,e=d/2-shrink,t=Math.min(.1,a/4,e/4);
-        return [[-a+t,-e],[a-t,-e],[a,-e+t],[a,e-t],[a-t,e],[-a+t,e],[-a,e-t],[-a,-e+t]].map(([xx,zz])=>[x+xx,yy,z+zz]);
+        const points=[];
+        for(let corner=0;corner<4;corner++){
+          const cx=corner===1||corner===2?-a+t:a-t,cz=corner<2?e-t:-e+t;
+          for(let step=0;step<=3;step++){
+            const angle=(corner+step/3)*Math.PI/2;
+            points.push([x+cx+t*Math.cos(angle),yy,z+cz+t*Math.sin(angle)]);
+          }
+        }
+        return points;
       };
-      const rings=[ring(b,y),ring(0,y+b),ring(0,y+h-b),ring(b,y+h)];
-      for(let j=1;j<4;j++)for(let i=0;i<8;i++){
-        const a=rings[j-1],k=rings[j],n=(i+1)%8;
-        // Only the four broad vertical faces carry painted ornament.
-        const finish=j===2 && grain==='paint' && i%2===0 ? 'paint' : Boolean(grain&&j===2);
+      const rings=[ring(b,y),ring(b*.28,y+b*.28),ring(0,y+b),ring(0,y+h-b),ring(b*.28,y+h-b*.28),ring(b,y+h)];
+      for(let j=1;j<rings.length;j++)for(let i=0;i<rings[j].length;i++){
+        const a=rings[j-1],k=rings[j],n=(i+1)%k.length;
+        const finish=j===3&&grain==='paint'&&i%4===3?'paint':Boolean(grain&&j===3);
         face([a[i],k[i],k[n],a[n]],c,finish);
       }
-      face([...rings[3]].reverse(),c,grain);
+      face([...rings.at(-1)].reverse(),c,grain);
     }
     function screw(x,y,z,r=.065){
       lathe(x,z,[[r*.8,y,brass],[r,y+.018,gold],[r*.8,y+.034,bright]],12);
@@ -170,13 +177,15 @@
     function lantern(x,z,baseY,k=1){
       const profile=[[.77,0,brass],[.85,.06,gold],[.82,.15,bright],[.68,.2,brass],[.66,.3,patina],[.77,.34,gold],[.78,.41,bright],[.58,.48,brass],[.52,.57,iron],[.53,.65,amber],[.69,.96,amber],[.63,1.49,ivory],[.46,1.75,amber],[.55,1.79,brass],[.72,1.84,gold],[.74,1.9,bright],[.57,1.96,brass],[.40,2.17,patina],[.13,2.28,gold],[.12,2.39,bright],[.04,2.44,gold]];
       const cold=stage===0 && actionTimer===null;
-      lathe(x,z,profile.map(([r,y,c])=>[r*k,y*k+baseY,cold&&c===amber?[125,108,82]:cold&&c===ivory?[153,143,114]:c]),12);
+      lathe(x,z,profile.map(([r,y,c])=>[r*k,y*k+baseY,cold&&c===amber?[125,108,82]:cold&&c===ivory?[153,143,114]:c]),36);
       for(let i=0;i<8;i++){
         const t=tau*i/8,c=Math.cos(t),s=Math.sin(t);
         for(const [lo,hi,r] of [[.44,.98,.70],[.98,1.85,.70]])
           block(x+c*r*k,baseY+lo*k,z+s*r*k,.055*k,(hi-lo)*k,.055*k,gold,.01);
       }
-      for(const y of [1.04,1.1,1.46])lathe(x,z,[[.69*k,baseY+y*k,gold],[.70*k,baseY+(y+.026)*k,brass]],16);
+      lathe(x,z,[[.70*k,baseY+1.0*k,cold?[133,84,65]:[187,100,56]],[.70*k,baseY+1.045*k,cold?[148,99,76]:[213,141,72]]],36);
+      lathe(x,z,[[.74*k,baseY+1.85*k,patina],[.745*k,baseY+1.88*k,[93,127,105]]],32);
+      for(const y of [1.04,1.1,1.46])lathe(x,z,[[.69*k,baseY+y*k,gold],[.70*k,baseY+(y+.026)*k,brass]],32);
     }
     function handle(id,label,anchor,tag=anchor){
       points.push({id,label,pt:project(anchor),tag:project(tag)});
