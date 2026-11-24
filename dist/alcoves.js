@@ -109,6 +109,16 @@ window.paintAlcove = function paintAlcove(canvas, kind) {
     poly([[315,352],[620,352],[659,388],[637,416],[328,416],[299,388]],'#854f48');
     for(let i=0;i<2;i++)poly([[307+i*5,387],[336+i*5,409],[630-i*5,409],[651-i*5,387]],null,'#c9a479',1);
   }
+  // Light passing through the same paper windows falls across the side aisles.
+  for (const side of [-1,1]) {
+    ctx.save();
+    if (side===1) {ctx.translate(W,0);ctx.scale(-1,1)}
+    for (let pane=0;pane<4;pane++) {
+      const x=36+pane*18;
+      poly([[x,426],[x+12,421],[x+109,478],[x+94,484]],bells?'#b7d8cc16':'#f4ca8e17');
+    }
+    ctx.restore();
+  }
   const vignette=ctx.createRadialGradient(480,240,150,480,240,550);
   vignette.addColorStop(0,'#18181300');vignette.addColorStop(.7,'#1b181310');vignette.addColorStop(1,'#17161576');
   rect(0,0,W,H,vignette);

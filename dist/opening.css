@@ -1,0 +1,34 @@
+#foreword {
+  position: fixed; inset: 0; z-index: 9999; isolation: isolate;
+  display: grid; place-items: center; overflow: auto; overscroll-behavior: contain;
+  background: #000; color: #e4dccc; font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "SimSun", serif;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+#foreword[hidden] {display:none}
+#foreword:focus {outline:0}
+.foreword-page {position:relative; width:min(47rem,100%); margin:auto; padding:1.3rem clamp(24px,5vw,52px); text-align:left}
+#foreword-lines {font-size:clamp(17px,2.05vw,28px); line-height:1.95; letter-spacing:.095em; line-break:strict; overflow-wrap:break-word}
+#foreword-lines p {margin:0; text-wrap:balance}
+#foreword-lines p+p {margin-top:.65em}
+#foreword-lines span {opacity:0; transition:opacity .48s ease-out}
+#foreword-lines .ink {opacity:1}
+#foreword-enter {display:block; margin:clamp(22px,5vh,52px) auto 0; padding:9px 18px; background:transparent; color:#b7aa96; border:0; font-size:14px; letter-spacing:.19em; visibility:hidden; opacity:0; transition:opacity .45s}
+#foreword.ready {cursor:pointer}
+#foreword.ready #foreword-enter {visibility:visible; opacity:1}
+#foreword::before {content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(0deg,#13120ed9,transparent 48%),url('night-playhouse.jpg') center 56% / cover no-repeat; opacity:0; transition:opacity .7s ease}
+.foreword-title {position:absolute; bottom:9%; left:8%; color:#fff0cf; letter-spacing:.14em; opacity:0; text-shadow:0 2px 6px #1a140f; pointer-events:none}
+.foreword-title small {display:block; font-size:clamp(13px,1.3vw,20px); margin-bottom:.4em}
+.foreword-title strong {font-weight:500; font-size:clamp(32px,5vw,75px)}
+#foreword.entering .foreword-page {opacity:0;transition:opacity .3s}
+#foreword.entering::before,#foreword.entering .foreword-title {opacity:1; transition:opacity .8s ease}
+#foreword.departing {opacity:0; transition:opacity .7s ease-in-out}
+.foreword-reader {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+@media(max-height:460px) {
+  #foreword-lines {font-size:clamp(16px,3.6vh,19px);line-height:1.6}
+  #foreword-lines p+p {margin-top:.4em}
+  #foreword-enter {margin-top:12px}
+}
+@media(max-width:560px){#foreword::before {background-position:47% center}}
+@media(prefers-reduced-motion:reduce){#foreword *,#foreword::before,#foreword {transition:none!important}}
+
+#foreword-lines p {visibility:hidden} #foreword-lines span {visibility:visible}

@@ -206,7 +206,12 @@
       for(let j=-2;j<2;j++)for(let i=-3;i<3;i++){
         const x=i*1.13,z=j*.95, corners=[[x,z],[x+1.12,z],[x+1.12,z+.94],[x,z+.94]];
         ctx.beginPath();corners.forEach(([a,b],k)=>{const q=project([a,-.692,b]);if(k)ctx.lineTo(q[0],q[1]);else ctx.moveTo(q[0],q[1])});
-        ctx.closePath();ctx.fillStyle=stage===2?((i+j)%2?'#50514ae5':'#565850e5'):((i+j)%2?'#49382de8':'#503c30e8');ctx.fill();
+        ctx.closePath();
+        const lit=project([x,-.692,z]),far=project([x+1.12,-.692,z+.94]);
+        const wash=ctx.createLinearGradient(lit[0],lit[1],far[0],far[1]);
+        const pair=stage===2?['#64716ce8','#404f4ee8']:stage>=3?['#6c4940e8','#49302de8']:['#66503ce8','#45382de8'];
+        wash.addColorStop(0,pair[(i+j)%2===0?0:1]);wash.addColorStop(1,pair[(i+j)%2===0?1:0]);
+        ctx.fillStyle=wash;ctx.fill();
       }
       const ground=project([0,-.686,0]);
       ctx.save();ctx.translate(ground[0],ground[1]);ctx.scale(1,.20);
