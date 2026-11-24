@@ -189,6 +189,8 @@
         const a=t+i*tau/8;
         face([vertex(.72,a,.09),vertex(.89,a+.13,.09),vertex(1.06,a,.09),vertex(.89,a-.13,.09)],bright);
       }
+      const tip=t+Math.PI/2;
+      face([vertex(.82,tip-.105,.11),vertex(1.14,tip,.11),vertex(.82,tip+.105,.11)],ivory);
       face([[-.1,3.65,0],[0,3.48,.04],[.10,3.65,0]],bright);
     }
     function draw(now){
@@ -219,7 +221,7 @@
         lathe(.75,.70,[[.23,.86,brass],[.26,.91,gold],[.21,.97,brass],[.21,1.08-.095*travel,bright],[.17,1.11-.095*travel,ivory]],20);
         if(stage===0)handle('act','按灯芯',[.75,1.08,.70],[1.30,1.16,1.05]);
       }else if(stage===1){
-        base(5.45,2.72);rail('chair',-.61,wood,65);rail('lamp',.63,patina,55);
+        base(5.45,2.72);rail('chair',-.61,wood,placementMarks.chair);rail('lamp',.63,patina,placementMarks.lamp);
         block(2.05,.86,.04,.98,.09,.42,iron);
         for(const x of [1.65,2.36])block(x,.94,.04,.12,.16,.42,brass);
         block(2.12-travel*.37,.97,.04,.74,.12,.22,gold);handle('act','扣锁栓',[2.12,1,.04],[2.35,1.47,.09]);
@@ -266,6 +268,25 @@
         light.addColorStop(.4,'rgba(255,175,60,'+(.42*progress)+')');
         light.addColorStop(1,'rgba(255,146,40,0)');
         ctx.fillStyle=light;ctx.fillRect(x-r,y-r,2*r,2*r);
+      }
+      if(playing&&Math.cos(rotation)>-.4){
+        const toScreen=p=>{const q=project(p);return [q[0],q[1],1]};
+        const line=(pts,done,dash)=>traceLine(ctx,toScreen,pts,done,dash);
+        if(stage===1){
+          for(const [key,z] of [['chair',-.61],['lamp',.63]])if(allowed(key)){
+            drawPlacement(key,(placementMarks[key]/100-.5)*4.3,1.18,z,values[key],line,true);
+          }
+        }else if(stage===3&&allowed('angle'))drawPlacement('angle',0,2.29,.13,values.angle,line,true);
+        if(stage===0&&allowed('act'))seal(ctx,toScreen([.75,1.34,.7]),'flame');
+        if(stage===1&&allowed('act'))line([[1.94,1.15,.05],[1.65,1.15,.05],[1.74,1.24,.05]],false,false);
+        if((stage===2||stage===3)&&allowed('act')){
+          const [x,y,z]=stage===2?[0,1.28,0]:[1.52,1.18,.12];
+          line([[x,y,z],[x,y-.32,z],[x-.09,y-.21,z]],false,false);
+          line([[x,y-.32,z],[x+.09,y-.21,z]],false,false);
+        }
+      }else if(playing&&allowed('drawer')&&Math.cos(rotation)<-.4){
+        const z=-drawerDepth()/2-.90;
+        traceLine(ctx,p=>{const q=project(p);return [q[0],q[1],1]},[[-.90,.32,z],[.90,.32,z],[.90,.61,z],[-.90,.61,z],[-.90,.32,z]],drawerOpen);
       }
       const inspect=document.getElementById('inspect');
       inspect.textContent=Math.cos(targetYaw)<0?'查看正面':'查看匣背';

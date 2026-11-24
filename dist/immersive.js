@@ -55,6 +55,8 @@ for(const [b,dir] of [[up,-1],[down,1]]){
 const interact=el('action');markButton(interact,'hand','互动');const legend=document.createElement('span');legend.textContent='互动';interact.append(legend);
 touch.append(pad,interact);immersiveRoot.append(touch);
 const carry=el('carryControl');carry.firstChild.textContent='';const captionLabel=document.createElement('span');captionLabel.id='carryCaption';captionLabel.textContent='椅轨';carry.prepend(captionLabel);
+const trackMount=document.createElement('span');trackMount.className='markedTrack';
+el('carryRange').before(trackMount);trackMount.append(el('carryRange'));
 const propLayer=document.createElement('div');propLayer.id='sceneProps';immersiveStage.append(propLayer);
 const propNames={lamp:'铜灯座',chair:'木椅',lock:'影轨尺座',window:'窗轴',bell:'铜铃'};
 function useSceneProp(name){
@@ -68,7 +70,7 @@ function useSceneProp(name){
  }
 }
 const propButtons={};for(const [name,label] of Object.entries(propNames)){
- const b=makeButton('prop-'+name,'◇');b.className='propPoint';b.setAttribute('aria-label',label);b.title=label;b.hidden=true;b.onclick=()=>useSceneProp(name);propLayer.append(b);propButtons[name]=b;
+ const b=makeButton('prop-'+name,'');b.innerHTML=etchIcon(name);b.className='propPoint';b.setAttribute('aria-label',label);b.title=label;b.hidden=true;b.onclick=()=>useSceneProp(name);propLayer.append(b);propButtons[name]=b;
 }
 function positionPropPins(hits){
  const show=playing&&wide&&!sceneBusy()&&s.stage<4;
@@ -81,6 +83,17 @@ function positionPropPins(hits){
  }
 }
 function syncImmersive(){
+ const next=nextImpression(),free=!beat&&examining===null&&!contactRun&&!pendingCut;
+ const holding=i=>selectedPieces.length===1&&selectedPieces[0]===i;
+ const receiver=(examining===2&&!clueReady())||(examining===1&&s.stage===3&&!s.kit[3].opened);
+ el('mountImprint').hidden=!receiver||!cluesActive()||!wide;
+ el('mountImprint').setAttribute('aria-label',holding(examining===2?2:3)?'将手中物件嵌入轮廓':'为这处轮廓选择物件');
+ const needsPiece=examining===2&&!clueReady()&&!holding(2)||s.stage===3&&examining===1&&!s.kit[3].opened&&!holding(3);
+ for(const b of [pocket,el('switch'),inspectPack])b.classList.toggle('nextEtch',free&&b.id===next?.control||needsPiece&&b===inspectPack);
+ for(const [name,b] of Object.entries(propButtons))b.classList.toggle('nextEtch',free&&next?.prop===name);
+ const k=beat==='chair'?'chair':visual.tuning;
+ if(k){carry.style.setProperty('--markRatio',placementMarks[k]/100);carry.classList.toggle('onMark',fitsMark(k,s[k]))}
+ guideCanvas.hidden=!playing||!wide||!!(s.alcove||contactRun||pendingCut||beat==='portrait')||s.stage===4;
  const blocked=sceneBusy();
  el('portrait').disabled=!playing||blocked;
  el('view').disabled=el('view').disabled||blocked;
@@ -91,6 +104,12 @@ function syncImmersive(){
  reply.textContent=examining!==null?el('caseNote').textContent:'';
  immersiveRoot.classList.toggle('examining',examining!==null);
 }
+el('mountImprint').onclick=()=>{
+ if(!cluesActive()||examining===null||!nearSite(examining))return;
+ const expected=examining===2?2:3;
+ if(selectedPieces.length===1&&selectedPieces[0]===expected)changeItem(examining);
+ else showSheet(pack);
+};
 function exitDetail(){if(examining!==null)finishExamine();else if(beat==='tune'||beat==='chair'||beat==='portrait')el('leaveBeat').click();else if(!wide)el('view').click()}
 document.addEventListener('keydown',e=>{
  if(e.ctrlKey||e.metaKey||e.altKey)return;

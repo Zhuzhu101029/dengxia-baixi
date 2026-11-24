@@ -42,3 +42,49 @@ html,body{width:100%;height:100%;overflow:hidden;margin:0}
 @media(max-height:450px){#alcove .alcove-head{max-width:calc(100% - 96px)}}
 
 #carryRead{display:inline-block;min-width:3ch;text-align:end;font-variant-numeric:tabular-nums}
+
+/* These impressions sit on the stage and never intercept a hand or pointer. */
+#placementTraces{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.stage:not(.wide) #placementTraces,.stage.in-alcove #placementTraces{display:none}
+.etchIcon{display:inline-block;width:30px;height:30px;vertical-align:middle;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2}
+#assemblyEtching{display:flex;align-items:center;gap:23px;margin:8px 0 15px;padding:9px 15px;border-block:1px solid #8b75513f;width:fit-content}
+#assemblyEtching span{position:relative;color:#f3cf89}#assemblyEtching .imprint{color:#c3a478;stroke-dasharray:3 2}
+#assemblyEtching .etchIcon{width:40px;height:40px}#assemblyEtching span+span:before{position:absolute;left:-17px;top:9px;content:'+';color:#dec18b}
+#assemblyEtching span:last-child:before{content:'›';font-size:24px;top:3px}#bagSlots button .etchIcon{margin-right:5px}
+.nextEtch{outline:2px solid #f6cf87;outline-offset:2px;box-shadow:0 0 12px #f6cf8759}
+.markedTrack{position:relative;display:inline-flex;align-items:center}.markedTrack:after{content:'';position:absolute;top:-2px;left:calc(8px + (100% - 16px)*var(--markRatio,.5));transform:translateX(-50%);border-inline:4px solid transparent;border-top:6px solid #ffe0a0;pointer-events:none}
+#carryControl.onMark .markedTrack:after{border-top-color:#a2ead0}
+#bellEtching{display:flex;align-items:flex-end;gap:12px;padding:3px 9px;background:#2d241b;border:1px solid #8e7653;border-radius:3px}
+#bellEtching span{display:grid;place-content:end center;position:relative;width:27px;height:32px;color:#f0cc8a}
+#bellEtching span:not(:last-child):after{content:'›';color:#b39768;position:absolute;right:-10px;top:6px}
+#bellEtching svg{width:calc(var(--size)*31px);height:calc(var(--size)*31px);stroke-width:2.5}
+#bellEtching .sounded{color:#a2ead0;border-bottom:2px solid currentColor}
+#alcove[data-kind=bells] #alcoveFeedback{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%)}
+#instruments .silkPattern{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#instruments .silkPiece{position:relative}
+#instruments .stitched{box-shadow:inset 0 0 0 2px #a2ead0}#instruments .stitched .silkPattern{opacity:.35}
+@media(max-width:560px){#assemblyEtching{margin-block:4px 9px}#assemblyEtching .etchIcon{width:34px;height:34px}}
+
+#bellEtching .echo{outline:1px solid #f5d69b;background:#58482e;border-radius:3px}
+
+#worldPins .etchIcon,.propPoint .etchIcon{width:25px;height:25px;pointer-events:none}#handleItem .etchIcon{width:23px;height:23px;margin-right:5px}
+
+#transferStamp{position:absolute;top:calc(100% + 10px);right:0;display:flex;align-items:center;gap:3px;padding:4px 7px;border:1px solid #9b8156;border-radius:3px;background:#282219ed;color:#f5d49b;pointer-events:none;animation:transferInk 3.2s both}
+#transferStamp .etchIcon:nth-child(2){width:16px}#transferStamp .etchIcon:last-child{color:#a2ead0}
+@keyframes transferInk{0%{opacity:0;transform:translateY(4px)}12%,82%{opacity:1;transform:none}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){#transferStamp{animation:none}}
+
+#mountImprint{position:absolute;z-index:3;transform:translate(-50%,-50%);padding:0;min-height:0;border:0;border-radius:4px;background:transparent;box-shadow:none;touch-action:manipulation}
+#mountImprint:hover{background:#ffdb8920}#mountImprint:focus-visible{outline:2px solid #ffe0a0}
+/* Keep action rows and evidence readable when the handset is sideways. */
+#gameLayout>#evidenceDetail{border-radius:7px;box-shadow:0 5px 22px #100e0b55}
+#evidenceDetail p{line-height:1.55}#evidenceDetail .caseActions{display:flex;flex-wrap:wrap;gap:6px}
+.sceneSheet{border-radius:9px}.sceneSheet #bagSlots{flex-wrap:wrap}
+#sceneNav button:focus-visible,#fieldTouch button:focus-visible,.sceneSheet button:focus-visible{outline:2px solid #ffe0a0;outline-offset:2px}
+@media(max-height:450px) and (min-width:480px){
+ #gameLayout>#evidenceDetail{bottom:5px;max-height:41dvh;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+ #evidenceDetail h2{font-size:16px}#evidenceDetail p{margin:2px 0;font-size:14px}
+ #evidenceDetail .caseActions{display:grid;grid-template-columns:auto auto;gap:4px;margin:0}
+ #evidenceDetail #handleItem{grid-column:1 / -1;grid-row:1}#evidenceDetail .caseActions button{padding:4px 8px;min-height:36px}
+}
+@media(prefers-reduced-motion:no-preference){.sceneSheet[open]{animation:openCase .15s ease-out}@keyframes openCase{from{opacity:.45;transform:translateY(4px)}to{opacity:1;transform:none}}}

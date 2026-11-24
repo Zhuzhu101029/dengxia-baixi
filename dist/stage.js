@@ -371,7 +371,11 @@ function theatre(canvas,software=false) {
     }
     const anchors=s.stage>=1&&s.stage<=3?window.relicSpots(s.stage):[];
     if(visual.probe!=null&&anchors[visual.probe]){
-      const [x,y,z]=anchors[visual.probe];target=[x,y,z];eye=[x+.4,y+.5,z+2.2];
+      const [x,y,z]=anchors[visual.probe];
+      // Keep the socket in the clear band between the menu and the evidence card.
+      const lift=canvas.clientHeight<470?.31:.15;
+      const distance=Math.max(2.3,1.82*h/w);
+      target=[x,y-lift,z];eye=[x+.18*distance,y-lift+.23*distance,z+distance];
     }
     const contact=visual.contact;
     if(contact){
@@ -383,10 +387,25 @@ function theatre(canvas,software=false) {
       const [x,y,z]=stageProp(visual.tuning==='angle'?'window':'lamp');
       target=[x,y,z];eye=[x+.80,y+.34,z+2.12];
     }
+    // Frame the entire usable rail. A fixed camera keeps the destination still during a drag.
+    if(!contact&&(work||visual.tuning==='lamp')){
+      const chair=!!work,lo=wx(chair?36:17),hi=wx(chair?60:26)+(chair?0:.42);
+      target=[(lo+hi)/2,.91,chair?.46:.1];
+      const back=unit(chair?[-.68,.33,.76]:[.23,.30,1]);
+      const horizontal=unit(cross([0,1,0],back)),vertical=unit(cross(back,horizontal));
+      let range=chair?3.35:2.65;
+      for(const x of [lo-.42,hi+.42])for(const y of [.02,1.9])for(const z of [-.16,chair?1.17:.42]){
+        const v=sub([x,y,z],target);
+        range=Math.max(range,dot(v,back)+Math.max(Math.abs(dot(v,horizontal))*2.5*h/w/.86,Math.abs(dot(v,vertical))*2.5/.69));
+      }
+      eye=target.map((v,i)=>v+back[i]*range);
+    }
     const forward=unit(sub(target,eye)),right=unit(cross(forward,[0,1,0])),up=cross(right,forward);
-    visual.pickCoords=anchors.map(p=>{
+    const projectTrace=p=>{
       const v=sub(p,eye),d=dot(v,forward);return [.5+1.25*h/w*dot(v,right)/d,.5-1.25*dot(v,up)/d,d];
-    });
+    };
+    drawStageTraces(projectTrace);
+    visual.pickCoords=anchors.map(projectTrace);
     projectClues(visual.pickCoords);
     const objects=s.stage===0?['lamp']:s.stage===1?['lamp','chair','lock']:s.stage===2?['bell']:s.stage===3?['window','bell']:[];
     visual.propHits=objects.map(name=>{
@@ -566,6 +585,8 @@ function theatre(canvas,software=false) {
     }
     // The apprentice walks downstage, the furniture sits midstage and the puppet walks on the raised rear deck.
     for(const k of ['a','b']){
+      // The object insert uses the performer's viewpoint after the reach has ended.
+      if(!contact&&(visual.probe!=null||visual.tuning))continue;
       if(contact&&k!==contact.role)continue;
       if(portrait?shot.role!==k:k==='b'&&(!s.stage||work||lampShot))continue;
       const carrying=k==='a'&&work, lighting=k==='a'&&lampShot;

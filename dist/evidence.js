@@ -103,9 +103,17 @@ function syncCase(){
   if(lastKitView===signature)return;lastKitView=signature;
   const sites=evNode('siteList'),bag=evNode('bagSlots');sites.replaceChildren();bag.replaceChildren();
   evNode('fieldSites').hidden=!cluesActive();
+  const diagram=evNode('assemblyEtching');diagram.hidden=!row;
+  if(row){
+    const icons=etchSets[s.stage];
+    diagram.innerHTML=[0,1,2].map((i)=>'<span class="'+((i===2?row.made:row.mask&(1<<i))?'inked':'imprint')+'">'+etchIcon(icons[i])+'</span>').join('');
+  }
   if(cluesActive())book.sites.forEach((name,i)=>{
     sites.append(buttonFor(name,()=>startExamine(i)));
-    evNode('worldPins').children[i].setAttribute('aria-label','调查'+name);
+    const pin=evNode('worldPins').children[i];
+    pin.setAttribute('aria-label','调查'+name);
+    pin.innerHTML=etchIcon(s.stage===3&&i===1&&!row.opened?'key':etchSets[s.stage][i]);
+    pin.classList.toggle('nextEtch',nextImpression()?.site===i);
   });
   if(!detail.hidden){
     const closed=s.stage===3&&examining===1&&!row.opened;
@@ -114,6 +122,7 @@ function syncCase(){
     const take=evNode('handleItem'),picked=examining<2&&Boolean(row.mask&(1<<examining));
     take.disabled=picked||examining===2&&row.installed;
     take.textContent=closed?'试开箱扣':examining===2?(row.installed?'已装入':'试用手中物件'):picked?'已收入装备区':'收起'+book.pieces[examining];
+    take.insertAdjacentHTML('afterbegin',etchIcon(take.disabled?'check':closed?'key':etchSets[s.stage][examining]));
   }
   const slots=!row||row.installed?[]:row.made?[2]:[0,1].filter(i=>row.mask&(1<<i));
   if(s.stage===3&&!row.opened)slots.push(3);
@@ -122,7 +131,7 @@ function syncCase(){
       selectedPieces=selectedPieces.includes(i)?selectedPieces.filter(n=>n!==i):selectedPieces.length===2?[i]:[...selectedPieces,i];
       fieldNote(selectedPieces.length===2?'两件都已选中，可以试着拼合。':selectedPieces.length?(i===3?'从铃架底下滑出的薄铜签，边缘锉出了三道齿。':i===2?book.joined:book.findings[i]):'已放回装备区。');markScene();
       evNode('bagSlots').querySelector('[data-slot="'+i+'"]')?.focus({preventScroll:true});
-    });b.dataset.slot=i;b.setAttribute('aria-pressed',String(selectedPieces.includes(i)));bag.append(b);
+    });b.insertAdjacentHTML('afterbegin',etchIcon(etchSets[s.stage][i]));b.dataset.slot=i;b.setAttribute('aria-pressed',String(selectedPieces.includes(i)));bag.append(b);
   }
   if(!slots.length)bag.textContent=row?.installed?'本关物件已装入机关。':s.stage===4?'三处机关都已复原。':'装备区暂空。调查场景中的物件可以收下线索。';
   evNode('combine').hidden=slots.length<2;evNode('combine').disabled=selectedPieces.length!==2;
