@@ -15,9 +15,9 @@ function theatre(canvas,software=false) {
     gl.attachShader(program,shader);
   }
   compile(gl.VERTEX_SHADER,`attribute vec3 p,n;attribute vec3 pigment;
-    uniform vec3 eye,right,up,forward,light;uniform float aspect,illum;
+    uniform vec3 eye,right,up,forward,light,meshOffset;uniform float aspect,illum;
     varying mediump vec3 color,world,material,surface;
-    void main(){world=p;material=pigment;vec3 v=p-eye;float d=dot(v,forward);
+    void main(){world=p+meshOffset;material=pigment;vec3 v=world-eye;float d=dot(v,forward);
     gl_Position=vec4(dot(v,right)*2.5/aspect,dot(v,up)*2.5,1.002*d-.201,d);
     color=pigment; surface=n; }`);
   compile(gl.FRAGMENT_SHADER,`precision highp float;
@@ -69,7 +69,7 @@ function theatre(canvas,software=false) {
   gl.useProgram(program); buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf);
   attributes=['p','n','pigment'].map(name=>gl.getAttribLocation(program,name));
   for(const a of attributes)gl.enableVertexAttribArray(a);
-  un=Object.fromEntries(['eye','right','up','forward','light','aspect','illum','timber','printed','roomTint','cloth','clothOrigin','atlasReady'].map(k=>[k,gl.getUniformLocation(program,k)]));
+  un=Object.fromEntries(['eye','right','up','forward','light','aspect','illum','timber','printed','meshOffset','roomTint','cloth','clothOrigin','atlasReady'].map(k=>[k,gl.getUniformLocation(program,k)]));
   gl.uniform1i(gl.getUniformLocation(program,'wallPrint'),0);
   gl.uniform1i(gl.getUniformLocation(program,'oak'),1);
   gl.uniform1i(gl.getUniformLocation(program,'courtyard'),2);
@@ -135,24 +135,41 @@ function theatre(canvas,software=false) {
   function oval(x,y,z,rx,ry,depth,col){panel(Array.from({length:16},(_,i)=>[x+rx*Math.cos(i*Math.PI/8),y+ry*Math.sin(i*Math.PI/8)]),z,depth,col)}
   function limb(x,y,ex,ey,r,z,col){const d=Math.hypot(ex-x,ey-y)||1,dx=-(ey-y)*r/d,dy=(ex-x)*r/d;panel([[x+dx,y+dy],[x-dx,y-dy],[ex-dx,ey-dy],[ex+dx,ey+dy]],z,r*1.6,col)}
   // A stack of elliptical cross sections describes the silhouette and folds of a garment.
-  function shape(cx,cy,cz,rings,color,sides=12,pleat=0){
-    const levels=rings.map(([h,rx,rz,shift=0])=>Array.from({length:sides},(_,j)=>{
-      const a=j*2*Math.PI/sides,fold=1+(j%2?pleat:-pleat);
-      return point(cx+rx*Math.cos(a)*fold,cy+h,cz+shift+rz*Math.sin(a)*fold);
-    }));
-    if(!colors.has(color))colors.set(color,[0,2,4].map(i=>parseInt(color.slice(i,i+2),16)/255));
-    const rgb=colors.get(color);
-    const smooth=levels.map((ring,i)=>ring.map((v,j)=>{
-      const prev=levels[Math.max(0,i-1)],next=levels[Math.min(levels.length-1,i+1)];
-      const tangent=sub(ring[(j+1)%sides],ring[(j+sides-1)%sides]);
-      const n=unit(cross(sub(next[j],prev[j]),tangent));
-      return Math.hypot(...n)>.1?n:[0,i?1:-1,0];
-    }));
-    for(let i=1;i<levels.length;i++)for(let j=0;j<sides;j++){
-      const k=(j+1)%sides;
-      for(const [layer,index] of [[i-1,j],[i,j],[i,k],[i-1,j],[i,k],[i-1,k]])
-        data.push(...levels[layer][index],...smooth[layer][index],...rgb);
+  const profiles=new Map();
+  function emitProfile(mesh,center){
+    const c=Math.cos(yaw),sn=Math.sin(yaw);
+    for(let i=0;i<mesh.length;i+=9){
+      data.push(center[0]+c*mesh[i]+sn*mesh[i+2],center[1]+mesh[i+1],center[2]-sn*mesh[i]+c*mesh[i+2],
+        c*mesh[i+3]+sn*mesh[i+5],mesh[i+4],-sn*mesh[i+3]+c*mesh[i+5],mesh[i+6],mesh[i+7],mesh[i+8]);
     }
+  }
+  function shape(cx,cy,cz,rings,color,sides=12,pleat=0){
+    const key=[color,sides,pleat,...rings].join(';');
+    let vertices=profiles.get(key);
+    if(!vertices){
+      const mesh=[];
+      const levels=rings.map(([h,rx,rz,shift=0])=>Array.from({length:sides},(_,j)=>{
+        const a=j*2*Math.PI/sides,fold=1+(j%2?pleat:-pleat);
+        return [rx*Math.cos(a)*fold,h,shift+rz*Math.sin(a)*fold];
+      }));
+      if(!colors.has(color))colors.set(color,[0,2,4].map(i=>parseInt(color.slice(i,i+2),16)/255));
+      const rgb=colors.get(color);
+      const smooth=levels.map((ring,i)=>ring.map((v,j)=>{
+        const prev=levels[Math.max(0,i-1)],next=levels[Math.min(levels.length-1,i+1)];
+        const tangent=sub(ring[(j+1)%sides],ring[(j+sides-1)%sides]);
+        const n=unit(cross(sub(next[j],prev[j]),tangent));
+        return Math.hypot(...n)>.1?n:[0,i?1:-1,0];
+      }));
+      for(let i=1;i<levels.length;i++)for(let j=0;j<sides;j++){
+        const k=(j+1)%sides;
+        for(const [layer,index] of [[i-1,j],[i,j],[i,k],[i-1,j],[i,k],[i-1,k]])
+          mesh.push(...levels[layer][index],...smooth[layer][index],...rgb);
+      }
+      vertices=new Float32Array(mesh);
+      if(profiles.size>=180)profiles.delete(profiles.keys().next().value);
+      profiles.set(key,vertices);
+    }
+    emitProfile(vertices,point(cx,cy,cz));
   }
   // Tapered cloth around an articulated shoulder, elbow, hip or knee.
   function bone(start,end,r1,r2,color){
@@ -191,7 +208,7 @@ function theatre(canvas,software=false) {
   }
   // Keep stance feet on the floor in world coordinates. Only the lifted foot
   // travels, including the short recovery steps after stopping or turning.
-  const gaits=new Map();
+  const gaits=new Map(), heads=new Map();
   function walkFeet(role,x,z,facing,time){
     const c=Math.cos(facing),sn=Math.sin(facing);
     const rest=[-1,1].map(k=>[x+k*.12*c,z-k*.12*sn]);
@@ -200,26 +217,36 @@ function theatre(canvas,software=false) {
       g={feet:rest.map(pt=>pt.slice()),x,z,time,step:null,last:1};
       gaits.set(role,g);
     }
+    // Advance the planted feet on the same clock as the root, even on a slow frame.
     const dt=Math.max(.001,time-g.time),vx=(x-g.x)/dt,vz=(z-g.z)/dt;
-    const speed=Math.hypot(vx,vz),heights=[0,0];
-    if(!g.step){
-      const errors=rest.map((pt,i)=>Math.hypot(pt[0]-g.feet[i][0],pt[1]-g.feet[i][1]));
-      const other=1-g.last;
-      const i=errors[other]>.024?other:1-other;
-      if(errors[i]>(speed>.03?.105:.024)){
-        const lead=Math.min(.19,.17/Math.max(.01,speed));
-        g.step={i,start:time,from:g.feet[i].slice(),to:[rest[i][0]+vx*lead,rest[i][1]+vz*lead],duration:speed>.03?.205:.18};
+    const speed=Math.hypot(vx,vz),heights=[0,0],slices=Math.min(16,Math.ceil(dt*90));
+    const turn=Math.atan2(Math.sin(facing-(g.facing??facing)),Math.cos(facing-(g.facing??facing)));
+    for(let j=1;j<=slices;j++){
+      const f=j/slices,now=g.time+dt*f,angle=facing-turn*(1-f);
+      const rx=g.x+(x-g.x)*f,rz=g.z+(z-g.z)*f;
+      const targets=[-1,1].map(side=>[rx+side*.12*Math.cos(angle),rz-side*.12*Math.sin(angle)]);
+      if(!g.step){
+        const errors=targets.map((pt,i)=>Math.hypot(pt[0]-g.feet[i][0],pt[1]-g.feet[i][1]));
+        const other=1-g.last,i=errors[other]>.023?other:1-other;
+        if(errors[i]>(speed>.025?.072:.023)){
+          const duration=speed>.025?Math.min(.23,.205/Math.max(.82,speed)):.16;
+          // Land ahead of the hip. During stance the hip passes over this foot.
+          const lead=Math.min(.32,duration*1.48,.305/Math.max(.01,speed));
+          g.step={i,start:now,from:g.feet[i].slice(),to:[targets[i][0]+vx*lead,targets[i][1]+vz*lead],duration};
+        }
+      }
+      heights.fill(0);
+      if(g.step){
+        const {i,from,to,start,duration}=g.step;
+        const u=Math.min(1,(now-start)/duration),ease=u*u*(3-2*u);
+        g.feet[i]=from.map((v,k)=>v+(to[k]-v)*ease);
+        heights[i]=Math.min(.085,Math.hypot(to[0]-from[0],to[1]-from[1])*.35)*Math.sin(Math.PI*u)**2;
+        if(u===1){g.last=i;g.step=null}
       }
     }
-    if(g.step){
-      const {i,from,to,start,duration}=g.step;
-      const f=Math.min(1,(time-start)/duration),u=f*f*(3-2*f);
-      g.feet[i]=from.map((v,j)=>v+(to[j]-v)*u);
-      heights[i]=Math.min(.105,Math.hypot(to[0]-from[0],to[1]-from[1])*.42)*Math.sin(Math.PI*f)**2;
-      if(f===1){g.last=i;g.step=null}
-    }
-    if(g.step || rest.some((pt,i)=>Math.hypot(pt[0]-g.feet[i][0],pt[1]-g.feet[i][1])>.024))
-      redrawUntil=Math.max(redrawUntil,time*1000+260);
+    if(g.step||rest.some((pt,i)=>Math.hypot(pt[0]-g.feet[i][0],pt[1]-g.feet[i][1])>.023))
+      redrawUntil=Math.max(redrawUntil,time*1000+250);
+    g.facing=facing;
     g.x=x;g.z=z;g.time=time;
     return g.feet.map(([fx,fz],i)=>[c*(fx-x)-sn*(fz-z),.102+heights[i],sn*(fx-x)+c*(fz-z)]);
   }
@@ -230,7 +257,15 @@ function theatre(canvas,software=false) {
     const freeWalk=!grip&&!touch&&wick===null;
     const feet=freeWalk?walkFeet(opera,x,z,facing,t):null;
     if(!freeWalk)gaits.delete(opera);
-    const pelvis=.88-.011*weight*(1-Math.cos(2*phase))-(grip?.bend||0)-(touch?.reach||0)*.055;
+    // Carry some weight over the support foot, keeping the shoulders above the pelvis.
+    if(feet){
+      const shiftZ=Math.max(-.055,Math.min(.055,(feet[0][2]+feet[1][2])*.28));
+      origin=point(0,0,shiftZ);
+      for(const foot of feet)foot[2]-=shiftZ;
+    }
+    const reachHeight=feet?Math.min(...feet.map(([ax,ay,az],i)=>ay+Math.sqrt(Math.max(.36,.780**2-(ax-(i?.112:-.112))**2-az**2)))):.88;
+    const legs=[];
+    const pelvis=Math.min(.88,reachHeight)-.011*weight*(1-Math.cos(2*phase))-(grip?.bend||0)-(touch?.reach||0)*.055;
     const breath=.009*Math.sin(t*1.8+(opera?1.2:0)),torso=pelvis+breath;
     const greeting=finale;
     for(const sign of [-1,1]){
@@ -255,7 +290,8 @@ function theatre(canvas,software=false) {
       // keeps the relaxed knee just off lock without forcing a permanent squat.
       const bend=Math.sqrt(Math.max(.012**2,.3895**2-span**2/4));
       const knee=hip.map((v,i)=>(v+ankle[i])/2+forwardKnee[i]*bend);
-      const reach=ankle[2]/.32;
+      legs.push([hip,knee,ankle]);
+      const reach=Math.max(-1,Math.min(1,ankle[2]/.25));
       bone(hip,knee,.093,.075,'413c3a');bone(knee,ankle,.078,.056,opera?'393a3c':'494342');
       shape(ankle[0],ankle[1]-.101,ankle[2],[[0,.07,.126],[.027,.078,.14],[.068,.073,.136],[.11,.059,.079,-.035],[.112,0,0,-.035]],hair,10);
       const arm=-reach*.21,wristUp=sign>0?greeting:0;
@@ -320,23 +356,31 @@ function theatre(canvas,software=false) {
       }
       if(opera&&sleeve&&sign>0)bone(hand,[hand[0]+.028,hand[1]-.226,hand[2]-.09*weight],.08,.055,'ebddbe');
     }
-    const robe=[[opera?-.50:-.31,.30,.19],[0,.209,.149],[.13,.175,.13],[.37,.22,.158],[.46,.224,.146],[.51,.135,.103],[.52,.084,.087]];
-    shape(0,torso,0,robe,coat,28,.022);
-    shape(0,torso,0,[[robe[0][0],.304,.194],[robe[0][0]+.033,.30,.192]],hem,28,.022);
-    shape(0,torso,0,[[.09,.196,.147],[.157,.182,.144]],opera?'bba06e':'493b35',16);
-    // The player's moving costume carries its trim on the garment surface.
-    for (const side of [-1,1]) {
-      const border=opera?'b2996d':'706e5d';
-      for(let j=0;j<(opera?5:3);j++){
-        const h=robe[0][0]+.068+j*.038, x=side*(.121+.014*Math.sin(j*1.6));
-        bone([x,torso+h,.171],[x+side*.029,torso+h+.017,.165],.005,.004,border);
+    // Fit each lower garment ring around both trouser legs at its own height.
+    // The binding and hem use those same rings, so the trim moves with the cloth.
+    const hemY=opera?-.50:-.31;
+    function drape(h){
+      const y=torso+h, base=.194-.045*(h-hemY)/-hemY;
+      let front=base,back=-base;
+      for(const [hip,knee,ankle] of legs){
+        const [lo,hi]=y<knee[1]?[ankle,knee]:[knee,hip];
+        const u=Math.max(0,Math.min(1,(y-lo[1])/Math.max(.001,hi[1]-lo[1])));
+        const z=lo[2]+(hi[2]-lo[2])*u;
+        // Radius includes sleeve-of-cloth clearance at the lateral position of each leg.
+        front=Math.max(front,(z+.097)*1.34);
+        back=Math.min(back,(z-.097)*1.34);
       }
+      return [h,.317-.092*(h-hemY)/-hemY,(front-back)/2,(front+back)/2];
     }
-    // Dyed silk binding, a narrow inner piping and the woven waist tie.
+    const skirt=[hemY,hemY+.035,hemY+.052,hemY*.66,hemY*.33,0].map(drape);
+    const robe=[...skirt,[.13,.175,.13],[.37,.22,.158],[.46,.224,.146],[.51,.135,.103],[.52,.084,.087]];
+    shape(0,torso,0,robe,coat,28,.016);
+    const edging=ring=>[ring[0],ring[1]+.002,ring[2]+.002,ring[3]];
+    shape(0,torso,0,skirt.slice(0,2).map(edging),hem,28,.016);
+    shape(0,torso,0,skirt.slice(1,3).map(edging),opera?'e6bc7c':'879888',28,.016);
+    shape(0,torso,0,[[.09,.196,.147],[.157,.182,.144]],opera?'bba06e':'493b35',16);
     shape(0,torso,0,[[.102,.197,.148],[.119,.192,.148]],opera?'933f40':'406a68',24);
     shape(0,torso,0,[[.145,.184,.145],[.154,.183,.145]],opera?'ecbd70':'ad9d79',24);
-    const edgeY=robe[0][0];
-    shape(0,torso,0,[[edgeY+.040,.298,.189],[edgeY+.052,.295,.188]],opera?'e6bc7c':'879888',28,.018);
     const backTrim=opera?'be965e':'697e87';
     for(const dir of [-1,1]){
       bone([0,torso+.387,-.164],[dir*.09,torso+.417,-.151],.007,.007,backTrim);
@@ -352,6 +396,19 @@ function theatre(canvas,software=false) {
     for(const y of [.20,.235])bone([.097,torso+y,.124],[.138,torso+y,.11],.007,.007,sash);
     shape(0,torso+.467,0,[[0,.08,.076],[.14,.074,.074]],skin);
     const head=torso+.548-.035*greeting;
+    if(opera){
+      // A white undercollar and paired gold couching frame the painted face.
+      bone([-.085,torso+.510,.091],[.019,torso+.387,.169],.020,.018,'e5d7b8');
+      for(const sign of [-1,1]){
+        bone([sign*.130,torso+.414,.130],[sign*.164,torso+.387,.110],.005,.004,'d4b77f');
+        bone([sign*.164,torso+.387,.110],[sign*.154,torso+.365,.126],.004,.004,'d4b77f');
+      }
+    }
+    let faceMesh=heads.get(opera);
+    if(!faceMesh){
+      const outer=data,savedOrigin=origin,savedYaw=yaw;
+      data=[];origin=[0,0,0];yaw=0;
+      const head=0;
     // Each face has its own cross sections, chin, cheeks and forehead.
     const outline=opera
       ? [[0,.025,.046,.037],[.031,.058,.078,.031],[.077,.086,.104,.019],
@@ -430,12 +487,6 @@ function theatre(canvas,software=false) {
       }
       oval(0,h+.157 ,.123,.026,.034,.019,'b99a63');
       oval(0,h+.159,.135,.015,.022,.012,'9d5351');
-      // A white undercollar and paired gold couching frame the painted face.
-      bone([-.085,torso+.510,.091],[.019,torso+.387,.169],.020,.018,'e5d7b8');
-      for(const sign of [-1,1]){
-        bone([sign*.130,torso+.414,.130],[sign*.164,torso+.387,.110],.005,.004,'d4b77f');
-        bone([sign*.164,torso+.387,.110],[sign*.154,torso+.365,.126],.004,.004,'d4b77f');
-      }
     }else{
       shape(0,h,0,[[.067,.128,.106],[.079,.129,.109],[.111,.105,.097],[.137,.033,.039]],hair,16);
       // A side part leaves the right brow clear; a longer lock hooks by the ear.
@@ -446,6 +497,10 @@ function theatre(canvas,software=false) {
       oval(-.134,h+.126,-.063,.015,.014,.018,'c9a362');
       shape(-.035,h+.125,-.093,[[0,.088,.074],[.014,.088,.074]],'865347',14);
     }
+      faceMesh=new Float32Array(data);heads.set(opera,faceMesh);
+      data=outer;origin=savedOrigin;yaw=savedYaw;
+    }
+    emitProfile(faceMesh,point(0,head,0));
     origin=[0,0,0];yaw=0;
   }
   const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
@@ -500,6 +555,26 @@ function theatre(canvas,software=false) {
     ctx.save();ctx.clip();ctx.transform(a,b,c,d,x0-a*u0-c*v0,y0-b*u0-d*v0);
     ctx.drawImage(image,0,0);ctx.restore();
   }
+  // Keep rigid set pieces resident. A rail movement changes a translation, while
+  // collecting evidence invalidates only the corresponding station geometry.
+  const pieces=new Map();
+  let visiblePieces=[];
+  function fixedPiece(name,key,offset,build){
+    let item=pieces.get(name);
+    if(!item||item.key!==key){
+      const outer=data;
+      data=[];build();
+      const vertices=new Float32Array(data);data=outer;
+      const buffer=gl?(item?.buffer||gl.createBuffer()):null;
+      if(gl){gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW)}
+      item={key,buffer,vertices};pieces.set(name,item);
+    }
+    if(gl)visiblePieces.push({item,offset});
+    else{
+      const v=item.vertices;
+      for(let i=0;i<v.length;i+=9)data.push(v[i]+offset[0],v[i+1]+offset[1],v[i+2]+offset[2],v[i+3],v[i+4],v[i+5],v[i+6],v[i+7],v[i+8]);
+    }
+  }
   let warmth, bridgeReveal, bellSide, finalPose=0;
   return function draw(s,visual,t,dt){
     const w=Math.max(2,Math.round(canvas.clientWidth*Math.min(devicePixelRatio||1,gl?1.6:1.1))),h=Math.max(2,Math.round(canvas.clientHeight*w/Math.max(1,canvas.clientWidth)));
@@ -513,7 +588,9 @@ function theatre(canvas,software=false) {
       velocity[index]=(velocity[index]-frequency*carry*dt)*decay;
       return destination+(error+carry*dt)*decay;
     }
-    const turn=s.stage===3?(s.angle-50)*.006:s.stage===1?(s.lamp-50)*.0022:0;
+    const visibleMark=k=>propTravel?.key===k?propTravel.position:s[k];
+    const chairMark=visibleMark('chair'),lampMark=visibleMark('lamp'),angleMark=visibleMark('angle');
+    const turn=s.stage===3?(angleMark-50)*.006:s.stage===1?(lampMark-50)*.0022:0;
     const lens=[11.4,11.8,10.9,11.35,13.8][s.stage];
     const subject=visual.work?36+s.chair*.24:s.role==='b'?visual.b:visual.a;
     orbit=track(orbit,(s.role==='b'?.115:-.11)+turn+visual.look,0,3.4);
@@ -523,8 +600,8 @@ function theatre(canvas,software=false) {
     camRadius=track(camRadius,visual.work?6.7:s.stage===4?13.8:!visual.started?14.6:lens+(s.role==='b'?-.4:0),4,3.2);
     const shot=visual.shot, work=visual.work;
     const room=s.stage<2?'shop':s.stage===2?'river':'opera';
-    const cx=room==='river'?-3.9:room==='opera'?-1.1:wx(36+s.chair*.24);
-    const lx=room==='river'?-5.36:wx(17+s.lamp*.09),lz=.1;
+    const cx=room==='river'?-3.9:room==='opera'?-1.1:wx(36+chairMark*.24);
+    const lx=room==='river'?-5.36:wx(17+lampMark*.09),lz=.1;
     let eye=[Math.max(-10.1,Math.min(10.1,aim+Math.sin(orbit)*camRadius)),camHeight,Math.min(15,Math.cos(orbit)*camRadius)];
     let target=[aim,2.02+focus+(visual.pitch||0),0];
     const lampShot=shot?.kind==='lamp',portrait=shot?.kind==='portrait';
@@ -693,7 +770,7 @@ function theatre(canvas,software=false) {
       }
       environments.set(room,{mesh:data,shellLength,buffer,room,tint:roomColors[room]});
     }
-    const env=environments.get(room);data=[];
+    const env=environments.get(room);data=[];visiblePieces=[];
     origin=[0,0,0];yaw=0;
     if(anchors.length){
       const token={...s.kit[s.stage],angle:s.angle};
@@ -702,10 +779,12 @@ function theatre(canvas,software=false) {
         if(contact.kind==='fit')token.installed=true;
         if(contact.kind==='unlock')token.opened=true;
       }
+      fixedPiece('stations',[s.stage,token.mask,token.installed,token.opened,s.stage===3?token.angle:0].join('/'),[0,0,0],()=>{
       window.drawRelics(s.stage,token,{box:(x,y,z,w,h,d,c)=>{
         if(Math.min(w,h,d)>=.045)roundedBox(x,y,z,w,h,d,c,.014);
         else box(x,y,z,w,h,d,c);
       },shape,limb,oval,panel});
+      });
     }
     const left=wx(33),rightEnd=wx(67),z=-.88,deckY=.98;
     function deck(lo,hi){box((lo+hi)/2,deckY-.11,z,hi-lo,.22,.75,'504138');box((lo+hi)/2,deckY-.035,z+.38,hi-lo,.047,.03,'d3a975')}
@@ -733,7 +812,8 @@ function theatre(canvas,software=false) {
     const lifting=contact?.kind==='lift';
     const lift= lifting?.085*eased((contact.progress-.48)/.14)*(1-eased((contact.progress-.68)/.12)):0;
     const chairHeight=work?work.height:lift||0;
-    origin=[cx,chairHeight,.24];yaw=Math.PI;
+    fixedPiece('chair',0,[cx,chairHeight,.24],()=>{
+    origin=[0,0,0];yaw=Math.PI;
     for(const x of [-.29,.29])for(const z of [-.25,.25]){
       shape(x,0,z,[[0,.035,.035],[.025,.041,.041],[.085,.032,.032],[.45,.040,.040],[.54,.042,.042]],'674932',16);
     }
@@ -745,7 +825,11 @@ function theatre(canvas,software=false) {
     roundedBox(0,1.20,-.25,.66,.14,.09,'a9784f',.038);
     roundedBox(0,.90,-.25,.13,.56,.049,'865b40',.021);
     origin=[0,0,0];yaw=0;
+    });
+    yaw=0;origin=[0,0,0];
     // The ribbed silk shade meets the bracket at the cap; the wick remains at its original height.
+    fixedPiece('lamp',!!wickLit,[lx,0,lz],()=>{
+      const lx=0,lz=0;
     roundedBox(lx,.065,lz,.49,.13,.46,'797369',.05);roundedBox(lx,.91,lz,.24,1.72,.15,'644936');
     roundedBox(lx+.19,1.72,lz,.57,.09,.13,'76553c');
     bone([lx,1.42,lz],[lx+.34,1.69,lz],.034,.029,'946b44');
@@ -764,6 +848,7 @@ function theatre(canvas,software=false) {
       shape(lx+.42,y,lz,[[0,.075,.075],[.012,.111,.111],[.026,.109,.109],[.038,.074,.074],[.039,0,0]],'68857a',24);
       shape(lx+.42,y+.013,lz,[[0,.112,.112],[.007,.112,.112]],'d3af73',24);
     }
+    });
     const side=s.stage>=3?1:0;
     bellSide=(bellSide??side)+(side-(bellSide??side))*(1-Math.exp(-4.3*dt));
     for(const [gx,level] of [[wx(74),1-bellSide],[wx(25),bellSide]]){
@@ -811,7 +896,12 @@ function theatre(canvas,software=false) {
     gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,materials.get('oak').texture);
     gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,materials.get(room).texture);
     gl.uniform3f(un.clothOrigin,0,0,0);gl.uniform1f(un.cloth,0);gl.uniform1f(un.atlasReady,Number(materials.get('oak').ready));
-    gl.uniform1f(un.printed,Number(materials.get(room).ready));gl.uniform1f(un.timber,1);bindMesh(env.buffer);gl.drawArrays(gl.TRIANGLES,0,env.mesh.length/9);gl.uniform1f(un.timber,0);bindMesh(buf);
+    gl.uniform1f(un.printed,Number(materials.get(room).ready));gl.uniform1f(un.timber,1);bindMesh(env.buffer);gl.drawArrays(gl.TRIANGLES,0,env.mesh.length/9);gl.uniform1f(un.timber,0);
+    for(const {item,offset} of visiblePieces){
+      gl.uniform3fv(un.meshOffset,offset);bindMesh(item.buffer);
+      gl.drawArrays(gl.TRIANGLES,0,item.vertices.length/9);
+    }
+    gl.uniform3f(un.meshOffset,0,0,0);bindMesh(buf);
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,costumes[0]?.first??data.length/9);
     for (const [i,costume] of costumes.entries()){
       gl.uniform1f(un.cloth,1);gl.uniform3fv(un.clothOrigin,costume.origin);

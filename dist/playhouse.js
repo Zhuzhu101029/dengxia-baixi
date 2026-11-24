@@ -44,7 +44,10 @@ function advanceProp(dt){
   travel.position=distance===Math.abs(delta)?travel.goal:travel.position+Math.sign(delta)*distance;
   const mark=Math.round(travel.position),previous=s[k],aligned=isAligned();
   if(travel.position===travel.goal)stopPropTravel();
-  if(mark===previous)return false;
+  if(mark===previous){
+    if(!propTravel)save();
+    return k==='chair'&&distance>0;
+  }
   s[k]=mark;
   if(k!=='angle'){
     const scale=k==='chair'?.24:.09;s.a+=(mark-previous)*scale;

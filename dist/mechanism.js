@@ -357,13 +357,16 @@
       inspect.textContent=Math.cos(targetYaw)<0?'查看正面':'查看匣背';
       if(Math.abs(targetYaw-rotation)>.001||Math.abs(zoom-targetZoom)>.001||Math.abs(drawerGoal-drawer)>.00001)schedule();
       placeControls();if(actionTimer!==null&&!reduced)schedule();
-      if(swing>.01){swing=Math.max(0,swing-.032);schedule()}
+      if(swing>.01){swing=Math.max(0,swing-dt*1.92);schedule()}
     }
     function schedule(){if(!frame)frame=requestAnimationFrame(draw)}
     function resize(){
       width=host.clientWidth;height=host.clientHeight;
       const ratio=Math.min(window.devicePixelRatio||1,2);
-      canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);ctx?.setTransform(ratio,0,0,ratio,0,0);
+      const pixelsW=Math.round(width*ratio),pixelsH=Math.round(height*ratio);
+      if(canvas.width!==pixelsW||canvas.height!==pixelsH){
+        canvas.width=pixelsW;canvas.height=pixelsH;ctx?.setTransform(ratio,0,0,ratio,0,0);
+      }
       scale=Math.min(width/(stage===1?6.5:5.7),height/4.65);
       schedule();
     }

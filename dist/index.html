@@ -297,7 +297,7 @@ function tick(time){
   }
   const chairMoved=advanceProp(dt);
   advanceCarry(dt,chairMoved);
-  if(!document.hidden&&(time<redrawUntil||(playing&&!reduced&&time-idleFrame>110))){
+  if(!document.hidden&&(time<redrawUntil||(playing&&!reduced&&time-idleFrame>40))){
     const poseDt=Math.min(.2,Math.max(dt,(time-idleFrame)/1000));idleFrame=time;
     for(const k of ['a','b']){
       const dx=(s[k]-visual[k])*.162,dz=s.depth[k]-visual.depth[k],distance=Math.hypot(dx,dz),m=visual.motion[k];
