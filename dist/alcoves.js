@@ -1,4 +1,14 @@
 /* Two painted interior sets. The instruments themselves are interactive HTML. */
+const alcovePaintings=new Map();
+function alcovePainting(url,canvas,kind){
+  if(!alcovePaintings.has(url)){
+    const image=new Image();alcovePaintings.set(url,image);
+    image.onload=()=>{if(!canvas.parentElement.hidden)window.paintAlcove(canvas,canvas.parentElement.dataset.kind)};
+    image.src=url;
+  }
+  const image=alcovePaintings.get(url);
+  return image.complete&&image.naturalWidth?image:null;
+}
 window.paintAlcove = function paintAlcove(canvas, kind) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -69,9 +79,19 @@ window.paintAlcove = function paintAlcove(canvas, kind) {
   for(const y of [376,400,435,486])poly([[0,y],[960,y]],null,'#3c342c6b',1);
   for(const x of [132,824]){rect(x-5,61,11,301,wood);rect(x-8,345,17,22,'#635e51')}
   rail(0,22,960,20);rail(124,66,712,18);
+  const painting=alcovePainting('night-playhouse.jpg',canvas,kind);
+  const mural=alcovePainting(bells?'screen-river.jpg':'screen-opera.jpg',canvas,kind);
+  if(mural){
+    rail(320,91,320,8);rect(325,99,310,158,dark);
+    ctx.drawImage(mural,328,102,304,151);rail(320,256,320,7);
+  }
   // Paper windows frame the rear wall. All panes have an opaque backing.
   for(const x of [162,660]){
     rect(x,100,140,150,dark);rect(x+6,106,128,138,stripe(106,245,bells?['#bdc5b6','#77918b']:['#dcbb8b','#ab8a6a']));
+    if(painting){
+      const start=x<480?.09:.57;
+      ctx.drawImage(painting,painting.width*start,painting.height*.23,painting.width*.25,painting.height*.48,x+6,106,128,138);
+    }
     for(let j=0;j<5;j++)rect(x+8+j*30,107,4,137,wood);
     for(const y of [122,141,215,236])rect(x+5,y,130,4,wood);
     rail(x-5,246,150,8);

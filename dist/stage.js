@@ -16,43 +16,60 @@ function theatre(canvas,software=false) {
   }
   compile(gl.VERTEX_SHADER,`attribute vec3 p,n;attribute vec3 pigment;
     uniform vec3 eye,right,up,forward,light;uniform float aspect,illum;
-    varying mediump vec3 color,world,material;
+    varying mediump vec3 color,world,material,surface;
     void main(){world=p;material=pigment;vec3 v=p-eye;float d=dot(v,forward);
     gl_Position=vec4(dot(v,right)*2.5/aspect,dot(v,up)*2.5,1.002*d-.201,d);
-    vec3 ray=light-p;float sun=max(0.,dot(n,normalize(vec3(-.55,.95,.65))));
-    float lamp=max(0.,dot(n,normalize(ray)))*min(1.,22./(2.+dot(ray,ray)));
-    float bounce=.12*max(n.y,0.)+.10*max(n.z,0.);
-    color=pigment*(vec3(.49,.51,.53)+bounce+.40*sun+illum*lamp*vec3(.66,.43,.20));}`);
-  compile(gl.FRAGMENT_SHADER,`precision mediump float;varying mediump vec3 color,world,material;
-    uniform vec3 roomTint; uniform float timber,printed;uniform sampler2D wallPrint,oak;
+    color=pigment; surface=n; }`);
+  compile(gl.FRAGMENT_SHADER,`precision highp float;
+    varying mediump vec3 world,material,surface;
+    uniform vec3 roomTint,light,eye,clothOrigin;uniform float timber,printed,illum,cloth,atlasReady;
+    uniform sampler2D wallPrint,oak,courtyard;
     void main(){
-      float warm=smoothstep(.04,.15,material.r-material.b);
-      float rings=sin(world.x*41.+3.*sin(world.z*1.8)+world.y*26.);
-      float small=sin(95.*world.y+16.*world.x+2.1*sin(world.z*4.));
-      float grain=1.+timber*warm*(.026*rings+.012*small);
-      float depth=1.-timber*.12*smoothstep(4.,10.,abs(world.x));
-      vec2 grainUV=vec2(world.x*.19+world.z*.13,world.y*.45+world.z*.31);
-      float textureGrain=texture2D(oak,fract(grainUV)).r-.50;
-      vec3 finish=color*grain*depth*(1.+timber*warm*.10*textureGrain);
+      vec3 n=normalize(surface), q=world-clothOrigin;
+      float timberTone=step(.085, material.r-material.b)*(1.-step(.64,material.r));
+      float stone=1.-smoothstep(.055,.14,material.r-material.b);
+      vec2 tile=cloth>.5?vec2(.5,.5):timberTone>.5?vec2(0.):stone>.5?vec2(0.,.5):vec2(.5,0.);
+      vec2 uv=abs(n.y)>.72?q.xz:abs(n.x)>.78?q.zy:q.xy;
+      if(cloth>.5)uv=vec2(q.x+.52*q.z,q.y)*2.1;
+      else uv*=vec2(.46,.69);
+      vec2 mirrorUV=1.-abs(mod(uv,2.)-1.);
+      vec3 samplePaint=texture2D(oak,tile+.004+.492*mirrorUV).rgb;
+      float average=cloth>.5?.28:timberTone>.5?.31:stone>.5?.49:.73;
+      float relief=dot(samplePaint,vec3(.30,.59,.11))-average;
+      vec3 pigment=material*(1.+atlasReady*clamp(relief*1.85,-.38,.36));
+      vec3 ray=light-world; float r2=dot(ray,ray);
+      float fire=illum*(.28+.72*max(0.,dot(n,normalize(ray))))/(1.+.68*r2);
+      float side=max(0.,dot(n,normalize(vec3(-.57,.74,.45))));
+      float rim=cloth*.09*pow(1.-abs(dot(n,normalize(eye-world))),2.);
+      vec3 finish=pigment*(vec3(.57,.62,.66)+side*.39+max(0.,n.y)*.09-rim);
       if(timber>.5 && printed>.5 && world.z>-2.99 && world.z< -2.925 && abs(world.x)<3.53 && world.y>.80 && world.y<4.29){
-        vec2 uv=vec2((world.x+3.53)/7.06,(4.29-world.y)/3.49);
-        finish=texture2D(wallPrint,uv).rgb*(.85+.10*world.y/4.29);
+        finish=texture2D(wallPrint,vec2((world.x+3.53)/7.06,(4.29-world.y)/3.49)).rgb*.97;
       }
-      // Let the two practical lanterns pool softly on the wood behind them.
-      vec2 toSconce=vec2(abs(world.x)-4.0,world.y-4.1);
-      float spill=1./(1.+1.8*dot(toSconce,toSconce)+.8*(world.z+2.8)*(world.z+2.8));
-      finish*=mix(vec3(1.),roomTint,timber);
-      finish+=timber*spill*vec3(.14,.077,.026);
+      // The painted outdoor view sits behind the lattice, with timber mullions left in front.
+      float wing=abs(world.x)-5.47;
+      if(timber>.5 && world.z>-1.967 && world.z< -1.958 && abs(wing)<1.29 && world.y>2.075 && world.y<3.125){
+        vec2 view=vec2((world.x+7.)/14.,.28+(3.125-world.y)*.26);
+        finish=mix(pigment,texture2D(courtyard,view).rgb,.87)*.94;
+      }
+      float scroll=abs(world.x)-8.60;
+      if(timber>.5 && world.z>-3.081 && world.z< -3.074 && abs(scroll)<.66 && world.y>1.61 && world.y<4.25){
+        vec2 view=vec2((world.x<0.?.21:.75)+scroll*.20,.12+(4.25-world.y)*.30);
+        finish=texture2D(courtyard,view).rgb*.96;
+      }
+      vec2 wall=vec2(abs(world.x)-4.,world.y-4.2);
+      float spill=.11/(1.+2.*dot(wall,wall)+1.4*(world.z+2.8)*(world.z+2.8));
+      finish=finish*roomTint+vec3(.99,.52,.16)*(pigment+.085)*fire+spill*vec3(1.,.57,.23);
       gl_FragColor=vec4(finish,1.);
     }`);
   gl.linkProgram(program); if(!gl.getProgramParameter(program,gl.LINK_STATUS)) throw Error('着色器连接失败');
   gl.useProgram(program); buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf);
   attributes=['p','n','pigment'].map(name=>gl.getAttribLocation(program,name));
   for(const a of attributes)gl.enableVertexAttribArray(a);
-  un=Object.fromEntries(['eye','right','up','forward','light','aspect','illum','timber','printed','roomTint'].map(k=>[k,gl.getUniformLocation(program,k)]));
+  un=Object.fromEntries(['eye','right','up','forward','light','aspect','illum','timber','printed','roomTint','cloth','clothOrigin','atlasReady'].map(k=>[k,gl.getUniformLocation(program,k)]));
   gl.uniform1i(gl.getUniformLocation(program,'wallPrint'),0);
   gl.uniform1i(gl.getUniformLocation(program,'oak'),1);
-  for(const name of ['shop','river','opera','oak']){
+  gl.uniform1i(gl.getUniformLocation(program,'courtyard'),2);
+  for(const name of ['shop','river','opera','oak','courtyard']){
     const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([128,128,128,255]));
     for(const p of [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T])gl.texParameteri(gl.TEXTURE_2D,p,gl.CLAMP_TO_EDGE);
@@ -61,8 +78,14 @@ function theatre(canvas,software=false) {
     if(location.protocol==='file:')continue;
     const img=new Image();
     img.onload=()=>{if(gl.isContextLost())return;gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);material.ready=true;redrawUntil=performance.now()+400};
-    img.src=name==='oak'?'oak-grain.jpg':'screen-'+name+'.jpg';
+    img.src=name==='courtyard'?'night-playhouse.jpg':name==='oak'?'painted-materials.jpg':'screen-'+name+'.jpg';
   }
+  }
+  if (paper) {
+    for (const name of ['shop','river','opera']){
+      const img=new Image();img.onload=()=>{materials.set(name,img);redrawUntil=performance.now()+400};
+      img.src='screen-'+name+'.jpg';
+    }
   }
   const sub=(a,b)=>a.map((v,i)=>v-b[i]), cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>a.map(v=>v/(Math.hypot(...a)||1));
   const colors=new Map();let data=[],origin=[0,0,0],yaw=0,orbit=-.11,focus=0,aim=0,camHeight=2.6,camRadius=12.65,velocity=[0,0,0,0,0];
@@ -207,6 +230,14 @@ function theatre(canvas,software=false) {
     shape(0,torso,0,robe,coat,16,.038);
     shape(0,torso,0,[[robe[0][0],.304,.194],[robe[0][0]+.033,.30,.192]],hem,16,.038);
     shape(0,torso,0,[[.09,.196,.147],[.157,.182,.144]],opera?'bba06e':'493b35',16);
+    // The player's moving costume carries its trim on the garment surface.
+    for (const side of [-1,1]) {
+      const border=opera?'b2996d':'706e5d';
+      for(let j=0;j<(opera?5:3);j++){
+        const h=robe[0][0]+.068+j*.038, x=side*(.121+.014*Math.sin(j*1.6));
+        bone([x,torso+h,.171],[x+side*.029,torso+h+.017,.165],.005,.004,border);
+      }
+    }
     const sash=opera?'dbc79d':'ac896b';
     const collar=[[-.076,.506,.083],[-.058,.476,.144],[-.020,.417,.166],[.052,.336,.163],[.113,.250,.130]];
     for(let i=1;i<collar.length;i++){
@@ -307,6 +338,7 @@ function theatre(canvas,software=false) {
   // Paint the same projected triangles back to front on devices without a GPU context.
   function paint(env,eye,right,up,forward,light,brightness,w,h){
     paper.clearRect(0,0,w,h);
+    const mural=materials.get(env.room);
     const shell=[],faces=[], sun=unit([-.55,.95,.65]), scale=h*1.25;
     for(const mesh of [env.mesh,data])for(let i=0;i<mesh.length;i+=27){
       const pt=mesh.slice(i,i+3),n=mesh.slice(i+3,i+6);
@@ -326,19 +358,34 @@ function theatre(canvas,software=false) {
       }
       if(xy.length<6)continue;
       const ray=sub(light,pt);
-      const lamp=brightness*Math.max(0,dot(n,unit(ray)))*Math.min(1,22/(2+dot(ray,ray)));
+      const lamp=brightness*Math.max(0,dot(n,unit(ray)))*(1/(1+.68*dot(ray,ray)));
       const day=.47*Math.max(0,dot(n,sun));
       const rgb=[.52,.55,.56].map((base,k)=>Math.min(255,Math.round(255*mesh[i+6+k]*(mesh===env.mesh?env.tint[k]:1)*(base+day+lamp*[.89,.55,.23][k]))));
-      (mesh===env.mesh&&i<env.shellLength?shell:faces).push([depth/xy.length,xy,'rgb('+rgb.join(',')+')']);
+      let uv;
+      if(mural && mesh===env.mesh && xy.length===6 && vertices.every(v=>v[2]>=.101) &&
+         [i,i+9,i+18].every(j=>mesh[j+2]>-2.99 && mesh[j+2]<-2.925 && Math.abs(mesh[j])<=3.531 && mesh[j+1]>=.799 && mesh[j+1]<=4.291)){
+        uv=[i,i+9,i+18].flatMap(j=>[(mesh[j]+3.53)/7.06*mural.width,(4.29-mesh[j+1])/3.49*mural.height]);
+      }
+      (mesh===env.mesh&&i<env.shellLength?shell:faces).push([depth/xy.length,xy,'rgb('+rgb.join(',')+')',uv]);
     }
     shell.sort((a,b)=>b[0]-a[0]);faces.sort((a,b)=>b[0]-a[0]);
-    for(const [,xy,color] of shell.concat(faces)){
+    for(const [,xy,color,uv] of shell.concat(faces)){
       paper.beginPath();paper.moveTo(xy[0],xy[1]);for(let j=2;j<xy.length;j+=2)paper.lineTo(xy[j],xy[j+1]);paper.closePath();
-      paper.fillStyle=color;paper.fill();paper.strokeStyle=color;paper.lineWidth=.55;paper.stroke();
+      paper.fillStyle=color;paper.fill();paper.strokeStyle=color;paper.lineWidth=.55;paper.stroke();if(uv)paintPanelTriangle(paper,mural,xy,uv);
     }
   }
   const wx=n=>(n-50)*.162;
   const environments=new Map();
+  function paintPanelTriangle(ctx,image,xy,uv){
+    const [x0,y0,x1,y1,x2,y2]=xy;
+    const [u0,v0,u1,v1,u2,v2]=uv;
+    const du=u1-u0,dv=v1-v0,eu=u2-u0,ev=v2-v0,det=du*ev-dv*eu;
+    if(Math.abs(det)<.01)return;
+    const a=((x1-x0)*ev-(x2-x0)*dv)/det,b=((y1-y0)*ev-(y2-y0)*dv)/det;
+    const c=(du*(x2-x0)-eu*(x1-x0))/det,d=(du*(y2-y0)-eu*(y1-y0))/det;
+    ctx.save();ctx.clip();ctx.transform(a,b,c,d,x0-a*u0-c*v0,y0-b*u0-d*v0);
+    ctx.drawImage(image,0,0);ctx.restore();
+  }
   let warmth, bridgeReveal, bellSide, finalPose=0;
   return function draw(s,visual,t,dt){
     const w=Math.max(2,Math.round(canvas.clientWidth*Math.min(devicePixelRatio||1,gl?1.6:1.1))),h=Math.max(2,Math.round(canvas.clientHeight*w/Math.max(1,canvas.clientWidth)));
@@ -419,10 +466,12 @@ function theatre(canvas,software=false) {
       return {name,x:.5+1.25*h/w*dot(v,right)/d,y:.5-1.25*dot(v,up)/d,d};
     });
     positionPropPins(visual.propHits);
-    const targetWarmth=[.38,.85,.78,.72,1.05][s.stage];
-    warmth=(warmth??targetWarmth)+(targetWarmth-(warmth??targetWarmth))*(1-Math.exp(-dt*2.4));
+    const wickLit=s.stage>0 || contact?.kind==='light' && contact.transferred || lampShot && shot.progress>=.59;
+    const flicker=reduced?1:1+.027*Math.sin(t*3.2)+.012*Math.sin(t*6.6+.8);
+    const targetWarmth=wickLit?1.55:0;
+    warmth=reduced?targetWarmth:(warmth??targetWarmth)+(targetWarmth-(warmth??targetWarmth))*(1-Math.exp(-dt*2.4));
     finalPose+=((s.stage===4?1:0)-finalPose)*(1-Math.exp(-dt*2));
-    const light=portrait?[target[0]-.9,target[1]+1,target[2]+1.5]:[wx(18+s.lamp*.1),2.4,.4],brightness=portrait?.66:warmth;
+    const light=[lx+.42,1.28,lz],brightness=warmth*flicker;
     canvas.parentElement.style.setProperty('--parallax',(50+orbit*18)+'%');
     if(gl){for(const [k,v] of Object.entries({eye,right,up,forward,light}))gl.uniform3fv(un[k],v);
     gl.uniform3fv(un.roomTint, roomColors[room]);gl.uniform1f(un.aspect,w/h);gl.uniform1f(un.illum,brightness);}
@@ -432,7 +481,7 @@ function theatre(canvas,software=false) {
       const shellLength=data.length;
       const river=room==='river', opera=room==='opera';
       const wood=opera?'713d35':'644731',trim=opera?'cf9d5f':'ad8558';
-      const planks=['68503f','745742','6e513c','604a3b'];
+      const planks=['68665a','766f60','716958','605c51'];
       const stone=['72716b','827d72','696b67','7e7b73'];
       // Front walkway and side masonry terminate at the water line. The channel
       // beneath the arch sits below the two banks, leaving an actual opening.
@@ -528,7 +577,7 @@ function theatre(canvas,software=false) {
         buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
         gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);
       }
-      environments.set(room,{mesh:data,shellLength,buffer,tint:roomColors[room]});
+      environments.set(room,{mesh:data,shellLength,buffer,room,tint:roomColors[room]});
     }
     const env=environments.get(room);data=[];
     origin=[0,0,0];yaw=0;
@@ -576,7 +625,7 @@ function theatre(canvas,software=false) {
     limb(lx,1.42,lx+.34,1.69,.034,lz,'946b44');
     box(lx+.42,1.62,lz,.036,.17,.04,'a38250');
     box(lx+.42,1.51,lz,.35,.08,.36,'65462f');
-    box(lx+.42,1.28,lz,.29,.39,.30,s.stage||lampShot&&shot.progress>=.59||contact?.kind==='light'&&contact.transferred?'f4bc64':'957d5a');
+    box(lx+.42,1.28,lz,.29,.39,.30,wickLit?'efac59':'776f60');
     box(lx+.42,1.08,lz,.33,.05,.34,'65462f');
     for(const dx of [-.14,.14])for(const dz of [-.146,.146])
       box(lx+.42+dx,1.28,lz+dz,.025,.39,.025,'6c4933');
@@ -598,6 +647,7 @@ function theatre(canvas,software=false) {
       box(gx,1.64-drop,bellZ,.032,.14,.033,'c7a263');
       oval(gx,1.56-drop,bellZ,.055,.056,.05,'e5c283');
     }
+    const costumes=[];
     // The apprentice walks downstage, the furniture sits midstage and the puppet walks on the raised rear deck.
     for(const k of ['a','b']){
       // The object insert uses the performer's viewpoint after the reach has ended.
@@ -614,6 +664,7 @@ function theatre(canvas,software=false) {
       }
       const facing=lifting||contact||carrying?Math.PI:portrait?.08:lighting?Math.PI*.5:visual.motion[k].yaw;
       const motion=contact?{phase:x*2*Math.PI/1.12,weight:Math.sin(Math.PI*contact.step)}:carrying?{phase:cx*2*Math.PI/1.12,weight:work.moving}:visual.motion[k];
+      costumes.push({first:data.length/9,origin:[x,y,zp]});
       actor(x,y+.014,zp,k==='b',motion,facing,t,s.stage>=3,portrait?0:finalPose,
         carrying||lifting?{height:chairHeight-.014,bend:.055+chairHeight*.18,blend:lifting?contact.reach:1}:null,lighting?shot.progress:null,contact);
     }
@@ -622,10 +673,16 @@ function theatre(canvas,software=false) {
       gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
       for(const [index,location] of attributes.entries())gl.vertexAttribPointer(location,3,gl.FLOAT,false,36,12*index);
     }
+    gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,materials.get('courtyard').texture);
     gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,materials.get('oak').texture);
     gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,materials.get(room).texture);
+    gl.uniform3f(un.clothOrigin,0,0,0);gl.uniform1f(un.cloth,0);gl.uniform1f(un.atlasReady,Number(materials.get('oak').ready));
     gl.uniform1f(un.printed,Number(materials.get(room).ready));gl.uniform1f(un.timber,1);bindMesh(env.buffer);gl.drawArrays(gl.TRIANGLES,0,env.mesh.length/9);gl.uniform1f(un.timber,0);bindMesh(buf);
-    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,data.length/9);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,costumes[0]?.first??data.length/9);
+    for (const [i,costume] of costumes.entries()){
+      gl.uniform1f(un.cloth,1);gl.uniform3fv(un.clothOrigin,costume.origin);
+      gl.drawArrays(gl.TRIANGLES,costume.first,(costumes[i+1]?.first??data.length/9)-costume.first);
+    }
   }
 }
 

@@ -17,7 +17,7 @@ function stopCue(){
   for(const stamp of el('bellEtching')?.children||[])stamp.classList.remove('echo');
 }
 function leaveAlcove(){
-  stopCue();s.alcove='';el('alcove').hidden=true;
+  stageSound.listenForBells(false);stopCue();s.alcove='';el('alcove').hidden=true;
   el('alcove').parentElement.classList.remove('in-alcove');
   lockStage(false);
 }
@@ -63,7 +63,7 @@ function answerBell(index){
 function openAlcove(kind){
   closePerformance();stopMovement();s.alcove=kind;save();lockStage(true);
   const section=el('alcove'), rack=el('instruments'),isBell=kind==='bells';
-  section.hidden=false;section.dataset.kind=kind;section.parentElement.classList.add('in-alcove');
+  stageSound.listenForBells(isBell);section.hidden=false;section.dataset.kind=kind;section.parentElement.classList.add('in-alcove');
   el('alcoveAct').textContent=isBell?'第二关 · 雨桥内廊':'第三关 · 戏楼后房';
   el('alcoveTitle').textContent=isBell?'听铃阁':'缀袖间';
   el('alcoveClue').textContent=isBell?'铃舌回了东岸。每只铃绳都牵着一枚木簧，簧底压着一片铜。拾影说：“报过场，娘就来取它了。”':'拾影的长袖牵响左岸铃，绷架松开了。三片旧袖还留着娘的针孔。把红线接回来，他就能伸手接她下台。';

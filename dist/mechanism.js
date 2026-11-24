@@ -37,7 +37,7 @@
       block(0,.32,z+.48,1.65,.075,.88,iron,.025);
       block(0,.395,z+.46,1.39,.035,.72,gold,.01);
       for(let i=-2;i<=2;i++)block(i*.22,.43,z+.46,.045,.015,.32+.12*(2-Math.abs(i)),lacquer,.001);
-      block(0,.32,z,1.81,.29,.10,wood,.04,true);
+      block(0,.32,z,1.81,.29,.10,wood,.04,'paint');
       for(const x of [-.82,.82])block(x,.32,z-.05,.07,.29,.06,gold,.014);
       block(0,.40,z-.08,.44,.08,.20,bright,.025);
       if(Math.cos(rotation)<-.40)handle('drawer',drawerOpen?'合上暗格':'拉开暗格',[0,.45,z-.14],[0,.86,z-.24]);
@@ -84,6 +84,46 @@
       const [r,y,c]=profile.at(-1);
       if(r>.001)face(Array.from({length:segments},(_,i)=>ring(r,y,-i)),c);
     }
+    // A small silk-ground frieze for the case and bell rack. Paint once per
+    // chapter, then project it onto each long lacquer face as the player turns it.
+    const friezes = new Map();
+    function frieze() {
+      const kind = stage===2 ? 'river' : stage===3 ? 'opera' : 'bench';
+      if(friezes.has(kind))return friezes.get(kind);
+      const tile=document.createElement('canvas');
+      tile.width=480;tile.height=96;
+      const brush=tile.getContext('2d');
+      brush.fillStyle=kind==='opera'?'#74473c':kind==='river'?'#435c56':'#4d635d';
+      brush.fillRect(0,0,480,96);
+      for(const y of [7,13,82,88]){
+        brush.fillStyle=y===7||y===88?'#ba9865':'#91774d';
+        brush.fillRect(0,y,480,y===7||y===88?2:1);
+      }
+      brush.translate(240,48);
+      for(const dir of [-1,1]){
+        brush.save();brush.scale(dir,1);
+        brush.strokeStyle='#c1a97c';brush.lineWidth=2;
+        brush.beginPath();brush.moveTo(10,1);
+        brush.bezierCurveTo(45,30,90,26,118,2);
+        brush.bezierCurveTo(153,-27,177,-20,202,-8);
+        brush.bezierCurveTo(220,3,215,15,205,12);brush.stroke();
+        for(const [x,y,angle] of [[38,15,-.71],[70,20,-.40],[109,8,-.78],[153,-14,.28],[185,-13,.46]]){
+          brush.save();brush.translate(x,y);brush.rotate(angle);
+          brush.beginPath();brush.moveTo(0,0);brush.quadraticCurveTo(7,-12,28,-9);
+          brush.quadraticCurveTo(16,1,0,0);brush.fillStyle='#a4aa83';brush.fill();
+          brush.strokeStyle='#526953';brush.lineWidth=1;brush.stroke();brush.restore();
+        }
+        brush.restore();
+      }
+      for(let i=0;i<6;i++){
+        brush.save();brush.rotate(Math.PI*i/3);
+        brush.beginPath();brush.moveTo(0,1);brush.bezierCurveTo(-8,-2,-8,-13,0,-19);
+        brush.bezierCurveTo(8,-12,8,-2,0,1);brush.fillStyle='#a46850';brush.fill();
+        brush.lineWidth=1.4;brush.strokeStyle='#cfb788';brush.stroke();brush.restore();
+      }
+      brush.beginPath();brush.arc(0,0,3.4,0,tau);brush.fillStyle='#d1b37c';brush.fill();
+      friezes.set(kind,tile);return tile;
+    }
     function block(x,y,z,w,h,d,c,bevel=.06,grain=false){
       const b=Math.min(bevel,w/5,h/3,d/5);
       const ring=(shrink,yy)=>{
@@ -93,7 +133,9 @@
       const rings=[ring(b,y),ring(0,y+b),ring(0,y+h-b),ring(b,y+h)];
       for(let j=1;j<4;j++)for(let i=0;i<8;i++){
         const a=rings[j-1],k=rings[j],n=(i+1)%8;
-        face([a[i],k[i],k[n],a[n]],c,grain&&j===2);
+        // Only the four broad vertical faces carry painted ornament.
+        const finish=j===2 && grain==='paint' && i%2===0 ? 'paint' : Boolean(grain&&j===2);
+        face([a[i],k[i],k[n],a[n]],c,finish);
       }
       face([...rings[3]].reverse(),c,grain);
     }
@@ -119,7 +161,7 @@
       // The tray runs in a hollow case. Only the stiles flank its opening.
       const opening=1.87,sideWidth=(w-.09-opening)/2;
       for(const side of [-1,1])block(side*(opening+sideWidth)/2,.28,0,sideWidth,.48,d-.08,wood,.035,true);
-      block(0,.28,d/2-.14,opening,.48,.20,wood,.035,true);
+      block(0,.28,d/2-.14,opening,.48,.20,wood,.035,'paint');
       block(0,.63,0,opening,.13,d-.08,wood,.035,true);
       block(0,.65,0,w,.07,d,brass);
       block(0,.72,0,w-.18,.14,d-.16,wood,.045,true);
@@ -127,7 +169,8 @@
     }
     function lantern(x,z,baseY,k=1){
       const profile=[[.77,0,brass],[.85,.06,gold],[.82,.15,bright],[.68,.2,brass],[.66,.3,patina],[.77,.34,gold],[.78,.41,bright],[.58,.48,brass],[.52,.57,iron],[.53,.65,amber],[.69,.96,amber],[.63,1.49,ivory],[.46,1.75,amber],[.55,1.79,brass],[.72,1.84,gold],[.74,1.9,bright],[.57,1.96,brass],[.40,2.17,patina],[.13,2.28,gold],[.12,2.39,bright],[.04,2.44,gold]];
-      lathe(x,z,profile.map(([r,y,c])=>[r*k,y*k+baseY,c]),12);
+      const cold=stage===0 && actionTimer===null;
+      lathe(x,z,profile.map(([r,y,c])=>[r*k,y*k+baseY,cold&&c===amber?[125,108,82]:cold&&c===ivory?[153,143,114]:c]),12);
       for(let i=0;i<8;i++){
         const t=tau*i/8,c=Math.cos(t),s=Math.sin(t);
         for(const [lo,hi,r] of [[.44,.98,.70],[.98,1.85,.70]])
@@ -236,7 +279,7 @@
           block(x,.85,0,.38,2.61,.38,wood,.07,true);
           for(const y of [.94,1.09,3.06])block(x,y,0,.42,.10,.42,gold);
         }
-        block(0,3.38,0,3.55,.27,.46,lacquer,.06,true);
+        block(0,3.38,0,3.55,.27,.46,lacquer,.06,'paint');
         block(0,3.34,0,.22,.12,.24,brass);
         bell(0,0,1.91,1.07);handle('act','拉铃绳',[0,1.34,0],[.68,1.25,.3]);
       }else if(stage===3){
@@ -256,7 +299,12 @@
       faces.sort((a,b)=>a.depth-b.depth);
       for(const f of faces){
         const d=f.dots;ctx.beginPath();ctx.moveTo(d[0][0],d[0][1]);for(const p of d.slice(1))ctx.lineTo(p[0],p[1]);ctx.closePath();ctx.fillStyle=f.color;ctx.fill();ctx.strokeStyle=f.color;ctx.lineWidth=.55;ctx.stroke();
-        if(f.grain && d.length===4){
+        if(f.grain==='paint' && d.length===4){
+          const [a,b,,e]=d, tile=frieze();
+          ctx.save();ctx.clip();
+          ctx.transform((e[0]-a[0])/480,(e[1]-a[1])/480,(a[0]-b[0])/96,(a[1]-b[1])/96,b[0],b[1]);
+          ctx.globalAlpha=.87;ctx.drawImage(tile,0,0);ctx.restore();
+        }else if(f.grain && d.length===4){
           ctx.save();ctx.clip();ctx.lineWidth=.7;
           for(let i=1;i<=12;i++){
             const t=i/13,a=d[0],b=d[1],c=d[3],e=d[2];
@@ -266,12 +314,15 @@
           }ctx.restore();
         }
       }
-      if(stage===0&&progress>0&&!reduced){
-        const [x,y]=project([0,2.28,-.12]),r=Math.max(1,scale*.92);
+      if(stage===1 || stage===4 || (stage===0 && progress>0)){
+        const small=stage===1;
+        const center=small?[(values.lamp/100-.5)*4.3,1.77,.63]:[0,2.28,-.12];
+        const [x,y]=project(center),r=Math.max(1,scale*(small?.50:1.03)*zoom);
+        const strength=stage===0?progress:1;
         const light=ctx.createRadialGradient(x,y,0,x,y,r);
-        light.addColorStop(0,'rgba(255,230,146,'+(.8*progress)+')');
-        light.addColorStop(.4,'rgba(255,175,60,'+(.42*progress)+')');
-        light.addColorStop(1,'rgba(255,146,40,0)');
+        light.addColorStop(0,'rgba(255,224,151,'+(.51*strength)+')');
+        light.addColorStop(.39,'rgba(249,170,70,'+(.23*strength)+')');
+        light.addColorStop(1,'rgba(249,146,40,0)');
         ctx.fillStyle=light;ctx.fillRect(x-r,y-r,2*r,2*r);
       }
       if(playing&&Math.cos(rotation)>-.4){

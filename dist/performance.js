@@ -31,7 +31,7 @@
     const defs=node(root,'defs');
     const shadowFill=gradient(defs,id+'shadow',[[0,'#0e0907',.9],[.55,'#100b09',.68],[1,'#100b09',0]]);
     const glowFill=gradient(defs,id+'glow',[[0,'#ffebaa',.9],[.18,'#ffae48',.56],[1,'#ff9732',0]]);
-    const room=picture(root,kind==='portrait'?'scene2.jpg':'scene0.jpg',0,0,960,540,'xMidYMid slice');
+    const room=picture(root,kind==='portrait'?'room-opera.jpg':'room-shop.jpg',0,0,960,540,'xMidYMid slice');
     room.style.filter='blur(3px) brightness(.44) saturate(.8)';
     if (kind==='portrait') {
       const face=role==='b'?'face-shiying.webp':'face-azhao.webp';

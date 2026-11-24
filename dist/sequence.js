@@ -13,7 +13,7 @@ function closePerformance(){
   lockStage(Boolean(s.alcove));
 }
 function paintBeat(kind,progress,role){
-  if(draw){
+  if(draw && kind!=='portrait'){
     visual.shot={kind,progress,role};stageNode.classList.add('model-shot');redrawUntil=performance.now()+900;
   }else window.performBeat(el('performFrame'),kind,Math.max(0,Math.min(1,progress)),role);
 }

@@ -22,7 +22,18 @@
       }
       box(x,top-.13,z,width-.13,.16,depth-.12,oak);
       box(x,top-.036,z,width,.072,depth,light);
-      box(x,top-.14,z+depth/2-.048,width-.20,.023,.021,brass);
+      const front=z+depth/2-.049;
+      box(x,top-.14,front,width-.20,.023,.021,brass);
+      const paint=stage===3?'8e5447':stage===2?'4f716b':'637b70';
+      box(x,top-.174,front,width-.23,.043,.019,paint);
+      for(const side of [-1,1]){
+        const cx=x+side*(width/2-.20);
+        panel([[cx-.052,top-.174],[cx,top-.192],[cx+.052,top-.174],[cx,top-.156]],front+.012,.008,'b8a079');
+        // Shaped wooden corner braces join the shelf apron to the forelegs.
+        const leg=x+side*(width/2-.11);
+        panel([[leg,top-.20],[leg-side*.16,top-.20],[leg-side*.12,top-.225],
+          [leg-side*.07,top-.235],[leg,top-.31]],z+depth/2-.08,.072,oak);
+      }
     }
     function ruler(x,y,z,w,chair){
       // The stepped ends interlock. The pictograms differentiate the two scales.

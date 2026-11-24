@@ -56,11 +56,39 @@
     scene(currentStage);
   }
 
+  // Sparse plucked strings leave room between phrases for footsteps and bell cues.
+  const phrases=[[0,7,3,null,2],[0,5,7,null,3],[0,3,null,7,2],[0,7,10,null,5],[0,5,7,12,null]];
+  let noteIndex=0, nextNote=0, scoreLevel, listening=false;
+  function scoreTick(){
+    if(!ctx || ctx.state!=='running' || muted || document.hidden || !scoreLevel || !document.querySelector('.stage.in-play'))return;
+    const now=ctx.currentTime;
+    if(now<nextNote)return;
+    const index=noteIndex++%5;
+    const degree=phrases[currentStage][index];
+    nextNote=now+[1.55,2.25,1.15,2.9,3.35][index];
+    if(degree===null||listening)return;
+    const hz=[130.81,146.83,123.47,138.59,146.83][currentStage]*2**(degree/12);
+    for(const [harmonic,level,tail] of [[1,.077,2.8],[2,.024,1.15],[3,.013,.52]]){
+      const string=ctx.createOscillator(),gain=ctx.createGain();
+      string.frequency.setValueAtTime(hz*harmonic*1.008,now);
+      string.frequency.exponentialRampToValueAtTime(hz*harmonic,now+.16);
+      gain.gain.setValueAtTime(.00001,now);gain.gain.exponentialRampToValueAtTime(level,now+.025);
+      gain.gain.exponentialRampToValueAtTime(.00001,now+tail);
+      string.connect(gain).connect(scoreLevel);string.start(now);string.stop(now+tail+.02);
+      string.onended=()=>{string.disconnect();gain.disconnect()};
+    }
+  }
+  function listenForBells(value){
+    listening=value;
+    if(scoreLevel)scoreLevel.gain.setTargetAtTime(value?0:.64,ctx.currentTime,.07);
+  }
   function unlock() {
     if (muted || document.hidden || !(window.AudioContext || window.webkitAudioContext)) return;
     if (!ctx && navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
     try {
-      if (!ctx) { createRoom(); buildAmbience(); }
+      if (!ctx) { createRoom(); buildAmbience();
+          scoreLevel=ctx.createGain();scoreLevel.gain.value=listening?0:.64;
+          scoreLevel.connect(bus);scoreLevel.connect(room);setInterval(scoreTick,300); }
       if (ctx.state !== 'running') return ctx.resume().catch(() => {});
     } catch { /* Audio may be unavailable in restricted embedded browsers. */ }
   }
@@ -177,5 +205,5 @@
     if (document.hidden) ctx.suspend().catch(() => {});
     else unlock();
   });
-  window.stageSound = { unlock, play, scene, setMuted };
+  window.stageSound = { unlock, play, scene, setMuted, listenForBells };
 })();
