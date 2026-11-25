@@ -94,15 +94,20 @@ header{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 0}
 #alcove[data-kind=bells] #instruments{align-items:flex-start;border-top:10px ridge #835e41;gap:clamp(2px,2vw,30px);padding:0 7px 7px}
 #instruments button{position:relative;display:grid;justify-items:center;align-items:center;min-width:0}
 #alcove[data-kind=bells] #instruments button{width:clamp(60px,9vw,120px);padding:16px 3px 4px;border:0;background:transparent;color:#fff2cb;text-shadow:0 1px 4px #000}
-.bronze-bell{display:block;width:calc(100% * var(--bell-size));height:calc(clamp(80px,10vw,130px) * var(--bell-size));border-radius:45% 45% 13% 13%;border-bottom:6px ridge #a58d55;background:repeating-linear-gradient(0deg,transparent 0 13px,#c9b17c66 14px,transparent 16px),linear-gradient(90deg,#524d3a,#bb9a60 38%,#84724d 70%,#423e31);transform-origin:center top}
-.bronze-bell:before{content:"";position:absolute;top:0;left:49%;height:17px;border-left:3px solid #b3a279}
+.bronze-bell{position:relative;display:block;width:calc(100% * var(--bell-size));height:calc(clamp(80px,10vw,130px) * var(--bell-size));transform-origin:50% 0;filter:drop-shadow(1px 3px 2px #211e1b80)}
+.bronze-bell:before{content:"";position:absolute;top:-16px;left:calc(50% - 4px);width:6px;height:20px;border:2px solid #bb985a;border-radius:45%;background:#493e30}
+.bronze-bell:after{content:"";position:absolute;inset:0;clip-path:polygon(36% 0,64% 0,74% 9%,78% 22%,83% 55%,91% 79%,99% 88%,100% 96%,86% 100%,14% 100%,0 96%,1% 88%,9% 79%,17% 55%,22% 22%,26% 9%);background:
+ radial-gradient(ellipse at 50% 46%,#e4c481 0 3%,#675536 4% 6%,transparent 7%),
+ repeating-linear-gradient(53deg,transparent 0 9px,#c6b18475 10px 11px,transparent 12px 18px) 50% 72% / 82% 10% no-repeat,
+ linear-gradient(0deg,#655235 0 3%,#e1c181 4% 6%,transparent 8% 22%,#a79360 23% 25%,transparent 26% 71%,#ceab67 72% 74%,transparent 76%),
+ linear-gradient(90deg,#384d48,#577b6e 18%,#a49e78 38%,#6c8976 49%,#46695f 73%,#394b47 88%,#776c4d)}
 #instruments button>span:last-child{background:#211f17;padding:3px 9px;border-radius:2px;font-size:15px}
 #instruments .ringing{outline:2px solid #f1cc79}.ringing .bronze-bell{animation:chime .52s ease-in-out}
 @keyframes chime{25%{transform:rotate(12deg)}70%{transform:rotate(-6deg)}}
 #alcove[data-kind=silk] #instruments{position:relative;border:8px ridge #845f42;background:#635345;box-shadow:0 12px 18px #1d120c80}
 #alcove[data-kind=silk] #instruments:before,#alcove[data-kind=silk] #instruments:after{content:"";position:absolute;top:calc(50% - 4px);width:9px;height:8px;border-radius:50%;background:#ffda81;z-index:1}
 #alcove[data-kind=silk] #instruments:before{left:-7px}#alcove[data-kind=silk] #instruments:after{right:-7px}
-#alcove[data-kind=silk] #instruments button{width:clamp(48px,22vw,130px);padding:0;border:0;border-radius:0;background:repeating-linear-gradient(42deg,#617878,#657c78 2px,#637772 4px)}
+#alcove[data-kind=silk] #instruments button{width:clamp(48px,22vw,130px);padding:0;border:0;border-radius:0;background:repeating-linear-gradient(0deg,#c6d1ac24 0 1px,transparent 1px 3px),repeating-linear-gradient(88deg,#718578 0 1px,#5c776d 1px 4px)}
 #instruments svg{display:block;width:100%;aspect-ratio:1;transition:transform .16s}
 @media(max-width:650px){.dialog{grid-template-columns:max-content minmax(0,1fr)}#projection{grid-column:2;margin:0}.main>.hud{gap:6px}.main>.hud .location{gap:4px 8px}.tools label{grid-template-columns:5em minmax(0,1fr) 2em}.overlay{overflow:auto}.panel{max-width:100%}#performBar{max-height:100%;overflow:auto}#alcove{padding:12px;gap:10px}.alcove-head,.alcove-foot{padding:9px 12px}.header-actions button{padding:5px 7px}}
 

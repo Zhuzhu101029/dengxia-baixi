@@ -15,24 +15,46 @@
       gilt='e5bd77',jade='53716a',ivory='e3d0a2',silk='b74944',ink='433c37';
     const loose=i=>!(token.mask & (1<<i));
     function table(x,z,width,top,depth=.72){
-      for(const dx of [-1,1])for(const dz of [-1,1]){
-        const xx=x+dx*(width/2-.11),zz=z+dz*(depth/2-.08);
-        box(xx,top/2,zz,.10,top,.10,oak);
-        box(xx,.055,zz,.13,.11,.13,dark);
-      }
-      box(x,top-.13,z,width-.13,.16,depth-.12,oak);
-      box(x,top-.036,z,width,.072,depth,light);
-      const front=z+depth/2-.049;
-      box(x,top-.14,front,width-.20,.023,.021,brass);
-      const paint=stage===3?'8e5447':stage===2?'4f716b':'637b70';
-      box(x,top-.174,front,width-.23,.043,.019,paint);
-      for(const side of [-1,1]){
-        const cx=x+side*(width/2-.20);
-        panel([[cx-.052,top-.174],[cx,top-.192],[cx+.052,top-.174],[cx,top-.156]],front+.012,.008,'b8a079');
-        // Shaped wooden corner braces join the shelf apron to the forelegs.
-        const leg=x+side*(width/2-.11);
-        panel([[leg,top-.20],[leg-side*.16,top-.20],[leg-side*.12,top-.225],
-          [leg-side*.07,top-.235],[leg,top-.31]],z+depth/2-.08,.072,oak);
+      const foot=width/2-.15;
+      if(stage===1){
+        // Splayed trestles and a through-tenon carry the joiner's thick bench top.
+        for(const side of [-1,1]){
+          const x0=x+side*foot;
+          for(const dz of [-1,1]){
+            const zz=z+dz*(depth/2-.075);
+            limb(x0+side*.056,.028,x0-side*.085,top-.10,.056,zz,'805737');
+          }
+          box(x0,.24,z,.12,.09,depth-.07,'b28b5c');
+        }
+        box(x,.247,z,width-.14,.077,.09,'8c603d');
+        box(x,top-.12,z,width-.16,.16,depth-.07,'755138');
+        box(x,top-.048,z,width,.096,depth,'c59a63');
+        box(x,top-.147,z+depth/2-.023,width-.19,.05,.018,'3c665d');
+        for(const side of [-1,1])oval(x+side*foot,top-.145,z+depth/2,.029,.029,.014,brass);
+      }else if(stage===2){
+        // Two hollow stone cradles, bound in verdigris, replace the joiner's legs.
+        for(const side of [-1,1]){
+          const cx=x+side*width*.31;
+          shape(cx,.018,z,[[0,.19,.22],[.07,.20,.22],[.11,.145,.17],
+            [top-.18,.111,.143],[top-.11,.17,.20]],'70847c',8);
+          shape(cx,top-.21,z,[[0,.122,.149],[.047,.133,.161]],brass,8);
+        }
+        box(x,top-.063,z,width,.126,depth,'49645c');
+        box(x,top-.018,z,width+.032,.036,depth+.027,'9d997c');
+      }else{
+        // A red lacquer sewing cabinet with a recessed toe and paired brass drops.
+        box(x,.075,z,width-.22,.15,depth-.12,'513c3c');
+        box(x,top*.53,z,width-.105,top-.18,depth-.075,'743c43');
+        const front=z+depth/2-.030;
+        for(const side of [-1,1]){
+          const cx=x+side*width*.221;
+          box(cx,top*.53,front,width*.414,top-.24,.04,'975450');
+          box(cx,top*.53,front+.024,width*.345,top-.32,.012,'81504c');
+          oval(x+side*.081,top*.57,front+.05,.03,.039,.025,brass);
+          limb(x+side*.081,top*.57,x+side*.081,top*.46,.014,front+.065,gilt);
+        }
+        box(x,top-.047,z,width,.094,depth,'553a39');
+        box(x,top-.085,z,width+.014,.018,depth+.012,brass);
       }
     }
     function ruler(x,y,z,w,chair){
@@ -109,12 +131,26 @@
       for(const dx of [-.37,-.28])limb(a+dx,.887,a+dx+.06,1.101,.019,az-.073,oak);
       if(loose(0))clapper(a+.10,.887,az+.03,1);
       table(b,bz,.98,.56,.46);
-      for(const dx of [-.35,.35])box(b+dx,.76,bz,.085,.40,.12,oak);
-      box(b,.94,bz,.84,.068,.065,brass);
-      for(const dx of [-.24,.24])box(b+dx,.94,bz,.07,.41,.35,light);
-      box(b,.94,bz,.48,.16,.18,oak);
-      if(loose(1))for(let i=0;i<7;i++)box(b-.17+i*.055,.94,bz,.052,.28,.27,i%2?'c3a06d':'a67c51');
-      limb(b+.44,.94,b+.48,.78,.025,bz,brass);
+      for(const dz of [-.22,.22]){
+        limb(b-.25,.56,b,.94,.047,bz+dz,'54685c');
+        limb(b+.25,.56,b,.94,.047,bz+dz,'54685c');
+      }
+      for(const dz of [-.16,.16])oval(b,.94,bz+dz,.208,.208,.044,'927554');
+      oval(b,.94,bz,.143,.143,.30,'815d42');
+      if(loose(1))for(let i=0;i<6;i++)oval(b,.94,bz-.115+i*.045,.153,.153,.037,i%2?'d5b47b':'c6a16e');
+      oval(b,.94,bz+.22,.051,.051,.19,brass);
+      if(loose(1)){
+        // The tucked end and the detachable coil are both visible from the approach.
+        const front=bz+.203;
+        let last=[b+.060,.94];
+        for(let n=1;n<=38;n++){
+          const t=n*Math.PI/8,r=.060+n*.0037,pt=[b+r*Math.cos(t),.94+r*Math.sin(t)];
+          limb(...last,...pt,.012,front,n%3?'d2ae74':'edd09b');last=pt;
+        }
+        for(const pt of [[b-.214,.998],[b-.266,.910],[b-.294,.860],[b-.329,.867]]){
+          limb(...last,...pt,.014,front,'e1bb80');last=pt;
+        }
+      }
       table(c,cz,1.60,.66);
       for(const dx of [-.70,.70])box(c+dx,1.122,cz,.104,.924,.14,oak);
       box(c,1.61,cz,1.64,.13,.18,oak);
@@ -146,9 +182,13 @@
         box(c+dx,.09,cz,.35,.18,.46,dark);
         box(c+dx,.96,cz,.105,1.77,.13,oak);
       }
-      box(c,1.87,cz,1.48,.11,.18,dark);
-      box(c,.86,cz,1.34,.105,.15,oak);
-      box(c,1.354,cz-.046,1.11,.89,.043,'8b927b');
+      // Side trunnions carry the circular window above a low stretcher.
+      for(const side of [-1,1]){
+        oval(c+side*.62,1.38,cz+.014,.071,.071,.16,brass);
+        shape(c+side*.62,1.79,cz,[[0,.066,.066],[.059,.076,.076],[.103,.035,.035],[.112,0,0]],gilt,12);
+      }
+      box(c,.62,cz,1.32,.068,.12,oak);
+      oval(c,1.38,cz-.066,.664,.664,.033,'9ba58a');
       // Brass axle on the front of the frame. Its pointer follows the real detent.
       const axisX=c+.37,axisY=1.13,axisZ=cz+.20;
       oval(axisX,axisY,axisZ,.19,.19,.04,dark);
@@ -159,9 +199,23 @@
       const pointerAngle=Math.PI*(.12+.76*(token.angle??15)/100);
       limb(axisX,axisY,axisX+.145*Math.cos(pointerAngle),axisY+.145*Math.sin(pointerAngle),.012,axisZ+.047,brass);
       oval(axisX,axisY,axisZ+.05,.023,.023,.018,gilt);
-      for(const dx of [-.38,0,.38])box(c+dx,1.36,cz,.032,.92,.05,oak);
-      for(const dy of [1.09,1.63])box(c,dy,cz,1.15,.037,.051,oak);
+      // Six open lozenges form a revolving flower around the spindle.
+      const phase=((token.angle??15)-70)*Math.PI/100;
+      const node=(r,t)=>[c+r*Math.cos(t),1.38+r*Math.sin(t)];
+      for(let i=0;i<6;i++){
+        const t=phase+i*Math.PI/3;
+        const path=[node(.09,t),node(.37,t-.27),node(.632,t),node(.37,t+.27),node(.09,t)];
+        for(let j=1;j<path.length;j++)limb(...path[j-1],...path[j],.013,cz-.011,'946d48');
+      }
       panel([[c-.52,1.67],[c+.19,1.67],[c+.13,1.43],[c-.10,1.38],[c-.31,1.18],[c-.52,1.24]],cz+.066,.042,'82534e');
+      // The old selvedge deliberately stops at the physical needle socket.
+      for(const [u,v,xx,yy] of [[-.50,1.63,.13,1.63],[-.48,1.60,.10,1.60],[-.48,1.26,-.32,1.21],[-.32,1.21,-.11,1.40]]){
+        limb(c+u,v,c+xx,yy,.007,cz+.095,'c49870');
+      }
+      for(let i=0;i<3;i++){
+        const x=c-.405+i*.089, y=1.47+i*.034;
+        panel([[x-.045,y],[x,y+.034],[x+.045,y],[x,y-.034]],cz+.099,.009,'ab795c');
+      }
       limb(c-.27,1.27,c-.105,1.39,.013,cz+.103,gilt);
       if(token.installed){
         hook(c-.10,1.39,cz+.12,.55);

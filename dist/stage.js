@@ -734,6 +734,9 @@ function theatre(canvas,software=false) {
     const env=environments.get(room);data=[];visiblePieces=[];
     origin=[0,0,0];yaw=0;
     if(anchors.length){
+      fixedPiece('setFurniture',s.stage,[0,0,0],()=>{
+        buildSetFurniture(s.stage,{box,panel,bone,shape,oval,face});
+      });
       const token={...s.kit[s.stage],angle:s.angle};
       if(contact?.transferred){
         if(contact.kind==='take')token.mask|=1<<contact.slot;
@@ -773,27 +776,25 @@ function theatre(canvas,software=false) {
     const lifting=contact?.kind==='lift';
     const lift= lifting?.085*eased((contact.progress-.48)/.14)*(1-eased((contact.progress-.68)/.12)):0;
     const chairHeight=work?work.height:lift||0;
-    fixedPiece('chair',0,[cx,chairHeight,.24],()=>{
-    origin=[0,0,0];yaw=Math.PI;
-    for(const x of [-.29,.29])for(const z of [-.25,.25]){
-      shape(x,0,z,[[0,.035,.035],[.025,.041,.041],[.085,.032,.032],[.45,.040,.040],[.54,.042,.042]],'674932',16);
-    }
-    roundedBox(0,.56,0,.72,.12,.64,'ab7650',.045);
-    for(const x of [-.29,.29]){
-      roundedBox(x,.91,-.25,.075,.74,.08,'80573d');
-      bone([x,.18,-.25],[x,.18,.25],.021,.021,'78543b');
-    }
-    roundedBox(0,1.20,-.25,.66,.14,.09,'a9784f',.038);
-    roundedBox(0,.90,-.25,.13,.56,.049,'865b40',.021);
-    origin=[0,0,0];yaw=0;
+    if(room==='shop')fixedPiece('chair',0,[cx,chairHeight,.24],()=>{
+      origin=[0,0,0];yaw=Math.PI;
+      buildYokeChair({shape,bone,box:roundedBox,panel,oval});
+      yaw=0;
     });
-    yaw=0;origin=[0,0,0];
+    origin=[0,0,0];yaw=0;
     // The ribbed silk shade meets the bracket at the cap; the wick remains at its original height.
-    fixedPiece('lamp',!!wickLit,[lx,0,lz],()=>{
+    fixedPiece('lamp',room+'/'+Number(wickLit),[lx,0,lz],()=>{
+      if(room!=='shop'){buildRoomLamp(room,wickLit,{shape,bone,box,face});return}
       const lx=0,lz=0;
-    roundedBox(lx,.065,lz,.49,.13,.46,'797369',.05);roundedBox(lx,.91,lz,.24,1.72,.15,'644936');
-    roundedBox(lx+.19,1.72,lz,.57,.09,.13,'76553c');
-    bone([lx,1.42,lz],[lx+.34,1.69,lz],.034,.029,'946b44');
+    shape(lx,0,lz,[[0,.24,.20],[.059,.25,.21],[.108,.188,.16],[.143,.124,.112]],'58766c',8);
+    shape(lx,.133,lz,[[0,.104,.087],[.09,.087,.076],[.15,.066,.060],[1.13,.059,.054],[1.22,.098,.087],[1.35,.077,.075],[1.42,.043,.042]],'966845',12);
+    for(const h of [.26,1.29])shape(lx,h,lz,[[0,.09,.079],[.026,.09,.079]],'cea369',12);
+    const neck=[[0,1.49],[.12,1.52],[.17,1.64],[.26,1.73],[.375,1.75],[.42,1.715]];
+    for(let j=1;j<neck.length;j++){
+      bone([...neck[j-1],lz],[...neck[j],lz],.047-j*.003,.044-j*.003,'926944');
+    }
+    panel([[-.044,1.51],[-.17,1.58],[-.23,1.72],[-.10,1.66],[.016,1.53]],lz,.065,'547767');
+    oval(.31,1.738,lz+.034,.012,.012,.008,'e8be7e');
     bone([lx+.42,1.51,lz],[lx+.42,1.72,lz],.020,.017,'a38250');
     const shell=[[0,.083,.094],[.035,.126,.135],[.10,.146,.149],[.21,.15,.15],[.30,.14,.14],[.365,.123,.130],[.39,.08,.09]];
     shape(lx+.42,1.085,lz,shell,wickLit?'edb86c':'887b64',32);
@@ -828,8 +829,8 @@ function theatre(canvas,software=false) {
       oval(gx,1.56-drop,bellZ,.055,.056,.05,'e5c283');
     }
     // Roof rosette, suspension rod, vented cap and lacquered cage carry an exposed oil wick.
-    fixedPiece('cueLantern',0,[cueLamp.x,cueLamp.y,cueLamp.z],()=>{
-      const brass='b2905d',bronze='725439',glaze='925344';
+    fixedPiece('cueLantern',room,[cueLamp.x,cueLamp.y,cueLamp.z],()=>{
+      const brass='c09a60',bronze=room==='river'?'456453':'725439',glaze=room==='opera'?'aa554d':room==='river'?'467770':'87543e';
       shape(0,2.67,0,[[0,.05,.05],[.045,.14,.14],[.09,.16,.16]],bronze,18);
       bone([0,.49,0],[0,2.70,0],.018,.018,brass);
       shape(0,.32,0,[[0,.26,.26],[.033,.265,.265],[.075,.13,.13],[.14,.06,.06],[.18,.024,.024]],bronze,16);
@@ -839,6 +840,19 @@ function theatre(canvas,software=false) {
       for(let i=0;i<6;i++){
         const a=(i+.5)*Math.PI/3,x=.209*Math.cos(a),z=.209*Math.sin(a);
         bone([x,-.18,z],[x*1.12,.32,z*1.12],.012,.014,brass);
+      }
+      if(room==='river'){
+        shape(0,.33,0,[[0,.29,.29],[.026,.34,.34],[.105,.16,.16],[.15,.054,.054]],glaze,8);
+        shape(0,-.23,0,[[0,.18,.18],[.024,.247,.247],[.038,.24,.24]],glaze,8);
+      }else if(room==='opera'){
+        for(let i=0;i<8;i++){
+          const a=i*Math.PI/4,at=(r,v,h)=>[r*Math.cos(a+v),h,r*Math.sin(a+v)];
+          face(at(.16,0,-.22),at(.23,-.30,-.13),at(.245,0,-.025),at(.23,.30,-.13),i%2?'ac6156':'c57c65');
+        }
+        for(const side of [-1,1]){
+          bone([side*.19,-.18,0],[side*.19,-.43,0],.006,.006,brass);
+          shape(side*.19,-.51,0,[[0,.028,.024],[.054,.022,.020],[.084,.008,.008]],glaze,10);
+        }
       }
       // Three back panes transmit the flame; the near panels leave the wick in view.
       for(let i=3;i<6;i++){

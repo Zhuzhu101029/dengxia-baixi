@@ -84,7 +84,13 @@ function openAlcove(kind){
       button.style.setProperty('--bell-size',bells[i].size);
       button.onclick=()=>answerBell(i);
     }else{
-      button.innerHTML='<svg class="silkPattern" aria-hidden="true" viewBox="0 0 100 100"><path d="'+threadPaths[i]+'" fill="none" stroke="#332719" stroke-width="8"/><path d="'+threadPaths[i]+'" fill="none" stroke="#ffe0a0" stroke-width="3" stroke-dasharray="4 4"/></svg><svg class="silkPiece" aria-hidden="true" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="4" fill="none" stroke="#bb9d72" stroke-dasharray="2 4"/><path d="'+threadPaths[i]+'" fill="none" stroke="#74342e" stroke-width="7"/><path d="'+threadPaths[i]+'" fill="none" stroke="#f8ad82" stroke-width="2" stroke-dasharray="3 2"/></svg>';
+      // A sprig stitched into each turning patch travels with the red repair line.
+      const sprigs=[
+        'M12 17q12 4 18 17m-8-11q1-9 8-10-1 8-8 10m4 5q-9 3-13-2 7-3 13 2',
+        'M61 81q10-9 22-8m-13 3q0-8 7-11 1 7-7 11m7-3q5 8 13 6-3-6-13-6',
+        'M61 22q10 5 18 17m-8-9q-1-9 5-12 3 7-5 12m3 4q-10 3-14-3 9-2 14 3'
+      ];
+      button.innerHTML='<svg class="silkPattern" aria-hidden="true" viewBox="0 0 100 100"><path d="'+threadPaths[i]+'" fill="none" stroke="#332719" stroke-width="8"/><path d="'+threadPaths[i]+'" fill="none" stroke="#ffe0a0" stroke-width="3" stroke-dasharray="4 4"/></svg><svg class="silkPiece" aria-hidden="true" viewBox="0 0 100 100"><path d="'+sprigs[i]+'" fill="none" stroke="#dbc49a" stroke-width="1.2"/><rect x="4" y="4" width="92" height="92" rx="4" fill="none" stroke="#bb9d72" stroke-dasharray="2 4"/><path d="'+threadPaths[i]+'" fill="none" stroke="#74342e" stroke-width="7"/><path d="'+threadPaths[i]+'" fill="none" stroke="#f8ad82" stroke-width="2" stroke-dasharray="3 2"/></svg>';
       setPatch(button,i);button.onclick=()=>turnPatch(button,i);
     }
   }

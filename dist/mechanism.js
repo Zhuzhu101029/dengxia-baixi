@@ -210,8 +210,10 @@
           block(x+.30*side,1.16,z-.17,.08,.94,.09,c);
           block(x+.30*side,1.16,z+.17,.08,.22,.09,c);
         }
-        block(x,1.89,z-.17,.75,.22,.10,c,.04,true);
-        block(x,1.62,z-.17,.66,.07,.07,gold);
+        block(x,2.014,z-.17,.75,.083,.10,gold,.03,true);
+        block(x,1.47,z-.17,.14,.55,.075,patina,.026);
+        block(x,1.71,z-.17,.184,.166,.084,patina,.035);
+        block(x,1.38,z,.65,.039,.45,[183,151,103],.012,true);
       }
       handle(id,id==='lamp'?'灯座':'椅轨',[x,1.55,z],[x,id==='lamp'?1.0:2.42,z+ (id==='lamp'?.4:0)]);
     }
@@ -234,10 +236,14 @@
         face([vertex(r-.12,a,.08),vertex(r,a,.08),vertex(r,b,.08),vertex(r-.12,b,.08)],i%5?gold:bright);
       }
       const pane=(x,y,z)=>[x*Math.cos(t)-y*Math.sin(t),cy+x*Math.sin(t)+y*Math.cos(t),z];
-      for(let i=-2;i<=2;i++){
-        const x=i*.36,span=Math.sqrt((r-.09)**2-x*x);
-        face([pane(x-.039,-span,.052),pane(x+.039,-span,.052),pane(x+.039,span,.052),pane(x-.039,span,.052)],wood);
-        face([pane(-span,x-.033,.055),pane(span,x-.033,.055),pane(span,x+.033,.055),pane(-span,x+.033,.055)],wood);
+      for(let i=0;i<6;i++){
+        const a=i*tau/6,pt=(rad,angle)=>[rad*Math.cos(angle),rad*Math.sin(angle)];
+        const nodes=[pt(.14,a),pt(.62,a-.27),pt(1.10,a),pt(.62,a+.27),pt(.14,a)];
+        for(let j=1;j<nodes.length;j++){
+          const [x,y]=nodes[j-1],[xx,yy]=nodes[j],l=Math.hypot(xx-x,yy-y);
+          const dx=(y-yy)*.024/l,dy=(xx-x)*.024/l;
+          face([pane(x-dx,y-dy,.06),pane(xx-dx,yy-dy,.06),pane(xx+dx,yy+dy,.06),pane(x+dx,y+dy,.06)],j%2?wood:gold);
+        }
       }
       for(let i=0;i<8;i++){
         const a=t+i*tau/8;
@@ -293,11 +299,14 @@
         block(2.12-travel*.37,.97,.04,.74,.12,.22,gold);handle('act','扣锁栓',[2.12,1,.04],[2.35,1.47,.09]);
       }else if(stage===2){
         base(3.72,1.78);
-        for(const x of [-1.34,1.34]){
-          block(x,.85,0,.38,2.61,.38,wood,.07,true);
-          for(const y of [.94,1.09,3.06])block(x,y,0,.42,.10,.42,gold);
+        for(const side of [-1,1]){
+          const x=side*1.34;
+          lathe(x,0,[[.27,.85,patina],[.29,.94,gold],[.21,1.06,patina],[.14,1.24,patina],[.105,2.98,[68,103,95]],[.159,3.14,patina],[.22,3.22,gold],[.19,3.48,patina]],16);
+          // The upturned prow ends echo the three-bell rack on the east bank.
+          for(const z of [-.14,.14])face([[side*.23,3.47,z],[side*1.21,3.61,z],[side*1.81,3.87,z],[side*1.66,3.58,z],[side*1.27,3.40,z]],patina);
+          lathe(side*1.56,.15,[[.044,3.60,gold],[.045,3.64,bright]],12);
         }
-        block(0,3.38,0,3.55,.27,.46,lacquer,.06,'paint');
+        block(0,3.38,0,3.22,.18,.38,patina,.05,'paint');
         block(0,3.34,0,.22,.12,.24,brass);
         bell(0,0,1.91,1.07);handle('act','拉铃绳',[0,1.34,0],[.68,1.25,.3]);
       }else if(stage===3){
