@@ -297,8 +297,8 @@ function tick(time){
   }
   const chairMoved=advanceProp(dt);
   advanceCarry(dt,chairMoved);
-  if(!document.hidden&&(time<redrawUntil||(playing&&!reduced&&time-idleFrame>40))){
-    const poseDt=Math.min(.2,Math.max(dt,(time-idleFrame)/1000));idleFrame=time;
+  if(!document.hidden&&(time<redrawUntil||(playing&&!reduced&&time-idleFrame>110))){
+    idleFrame=time;
     for(const k of ['a','b']){
       const dx=(s[k]-visual[k])*.162,dz=s.depth[k]-visual.depth[k],distance=Math.hypot(dx,dz),m=visual.motion[k];
       visual.depth[k]=s.depth[k];if(dx)m.depthWalk=false;
@@ -308,9 +308,9 @@ function tick(time){
       m.phase+=distance*2*Math.PI/cycle;
       if(Math.floor(before/Math.PI)!==Math.floor(m.phase/Math.PI))stageSound.play('step');
       const moving=distance>.00001;
-      m.weight+=(Number(moving)-m.weight)*(1-Math.exp(-poseDt*(moving?22:18)));
+      m.weight+=(Number(moving)-m.weight)*(1-Math.exp(-dt*(moving?22:18)));
       const angle=m.depthWalk?(m.depthSign>0?0:Math.PI):visual.dir[k]*Math.PI*.5;
-      m.yaw+=Math.atan2(Math.sin(angle-m.yaw),Math.cos(angle-m.yaw))*(1-Math.exp(-poseDt*14));
+      m.yaw+=Math.atan2(Math.sin(angle-m.yaw),Math.cos(angle-m.yaw))*(1-Math.exp(-dt*14));
     }
     if(draw&&(wide||visual.shot||visual.work))draw(s,visual,time/1000,dt);
   }

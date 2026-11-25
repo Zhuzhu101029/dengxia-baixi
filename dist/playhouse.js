@@ -46,7 +46,7 @@ function advanceProp(dt){
   if(travel.position===travel.goal)stopPropTravel();
   if(mark===previous){
     if(!propTravel)save();
-    return k==='chair'&&distance>0;
+    return false;
   }
   s[k]=mark;
   if(k!=='angle'){

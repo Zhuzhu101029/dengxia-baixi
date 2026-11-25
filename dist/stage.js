@@ -206,66 +206,13 @@ function theatre(canvas,software=false) {
       .102+.145*Math.sin(Math.PI*u)**2*weight,
       Math.sin(facing)*dx+Math.cos(facing)*dz];
   }
-  // Keep stance feet on the floor in world coordinates. Only the lifted foot
-  // travels, including the short recovery steps after stopping or turning.
-  const gaits=new Map(), heads=new Map();
-  function walkFeet(role,x,z,facing,time){
-    const c=Math.cos(facing),sn=Math.sin(facing);
-    const rest=[-1,1].map(k=>[x+k*.12*c,z-k*.12*sn]);
-    let g=gaits.get(role);
-    if(!g||time<g.time||Math.hypot(x-g.x,z-g.z)>.58||time-g.time>1){
-      g={feet:rest.map(pt=>pt.slice()),x,z,time,step:null,last:1};
-      gaits.set(role,g);
-    }
-    // Advance the planted feet on the same clock as the root, even on a slow frame.
-    const dt=Math.max(.001,time-g.time),vx=(x-g.x)/dt,vz=(z-g.z)/dt;
-    const speed=Math.hypot(vx,vz),heights=[0,0],slices=Math.min(16,Math.ceil(dt*90));
-    const turn=Math.atan2(Math.sin(facing-(g.facing??facing)),Math.cos(facing-(g.facing??facing)));
-    for(let j=1;j<=slices;j++){
-      const f=j/slices,now=g.time+dt*f,angle=facing-turn*(1-f);
-      const rx=g.x+(x-g.x)*f,rz=g.z+(z-g.z)*f;
-      const targets=[-1,1].map(side=>[rx+side*.12*Math.cos(angle),rz-side*.12*Math.sin(angle)]);
-      if(!g.step){
-        const errors=targets.map((pt,i)=>Math.hypot(pt[0]-g.feet[i][0],pt[1]-g.feet[i][1]));
-        const other=1-g.last,i=errors[other]>.023?other:1-other;
-        if(errors[i]>(speed>.025?.072:.023)){
-          const duration=speed>.025?Math.min(.23,.205/Math.max(.82,speed)):.16;
-          // Land ahead of the hip. During stance the hip passes over this foot.
-          const lead=Math.min(.32,duration*1.48,.305/Math.max(.01,speed));
-          g.step={i,start:now,from:g.feet[i].slice(),to:[targets[i][0]+vx*lead,targets[i][1]+vz*lead],duration};
-        }
-      }
-      heights.fill(0);
-      if(g.step){
-        const {i,from,to,start,duration}=g.step;
-        const u=Math.min(1,(now-start)/duration),ease=u*u*(3-2*u);
-        g.feet[i]=from.map((v,k)=>v+(to[k]-v)*ease);
-        heights[i]=Math.min(.085,Math.hypot(to[0]-from[0],to[1]-from[1])*.35)*Math.sin(Math.PI*u)**2;
-        if(u===1){g.last=i;g.step=null}
-      }
-    }
-    if(g.step||rest.some((pt,i)=>Math.hypot(pt[0]-g.feet[i][0],pt[1]-g.feet[i][1])>.023))
-      redrawUntil=Math.max(redrawUntil,time*1000+250);
-    g.facing=facing;
-    g.x=x;g.z=z;g.time=time;
-    return g.feet.map(([fx,fz],i)=>[c*(fx-x)-sn*(fz-z),.102+heights[i],sn*(fx-x)+c*(fz-z)]);
-  }
+  const heads=new Map();
   function actor(x,y,z,opera,motion,facing,t,sleeve,finale,grip=null,wick=null,touch=null){
     const {phase,weight}=motion, skin=opera?'eac9b1':'c99776',hair='302a29';
     const coat=opera?'326e73':'334762', sleeveColor=opera?'579391':'506682',hem=opera?'b47743':'6e4346';
     origin=[x,y,z];yaw=facing;
-    const freeWalk=!grip&&!touch&&wick===null;
-    const feet=freeWalk?walkFeet(opera,x,z,facing,t):null;
-    if(!freeWalk)gaits.delete(opera);
-    // Carry some weight over the support foot, keeping the shoulders above the pelvis.
-    if(feet){
-      const shiftZ=Math.max(-.055,Math.min(.055,(feet[0][2]+feet[1][2])*.28));
-      origin=point(0,0,shiftZ);
-      for(const foot of feet)foot[2]-=shiftZ;
-    }
-    const reachHeight=feet?Math.min(...feet.map(([ax,ay,az],i)=>ay+Math.sqrt(Math.max(.36,.780**2-(ax-(i?.112:-.112))**2-az**2)))):.88;
     const legs=[];
-    const pelvis=Math.min(.88,reachHeight)-.011*weight*(1-Math.cos(2*phase))-(grip?.bend||0)-(touch?.reach||0)*.055;
+    const pelvis=.88+.025*weight*Math.cos(2*phase)-(grip?.bend||0)-(touch?.reach||0)*.055;
     const breath=.009*Math.sin(t*1.8+(opera?1.2:0)),torso=pelvis+breath;
     const greeting=finale;
     for(const sign of [-1,1]){
@@ -277,8 +224,6 @@ function theatre(canvas,software=false) {
         const phase=step-Math.floor(step), swing=Math.max(0,(phase-.5)*2);
         const planted=(Math.floor(step)+.25-offset+eased(swing))*stride;
         ankle=[sign*.18-(planted-x)*weight,.102+.07*Math.sin(Math.PI*swing)**2*weight,0];
-      }else if(feet){
-        ankle=feet[sign<0?0:1];
       }else{
         ankle=motion.depthWalk?footTarget(z,sign,facing+Math.PI*.5,weight,opera):footTarget(x,sign,facing,weight,opera);
         ankle[0]=sign*.12+(ankle[0]-sign*.12)*weight;
@@ -286,12 +231,10 @@ function theatre(canvas,software=false) {
       }
       const axis=unit(sub(ankle,hip)),span=Math.hypot(...sub(ankle,hip));
       const forwardKnee=unit([-axis[0]*axis[2],-axis[1]*axis[2],1-axis[2]**2]);
-      // Resting hip-to-ankle distance is .778. A slight forward bias
-      // keeps the relaxed knee just off lock without forcing a permanent squat.
-      const bend=Math.sqrt(Math.max(.012**2,.3895**2-span**2/4));
+      const bend=Math.sqrt(Math.max(0,.445**2-span**2/4));
       const knee=hip.map((v,i)=>(v+ankle[i])/2+forwardKnee[i]*bend);
       legs.push([hip,knee,ankle]);
-      const reach=Math.max(-1,Math.min(1,ankle[2]/.25));
+      const reach=ankle[2]/.32;
       bone(hip,knee,.093,.075,'413c3a');bone(knee,ankle,.078,.056,opera?'393a3c':'494342');
       shape(ankle[0],ankle[1]-.101,ankle[2],[[0,.07,.126],[.027,.078,.14],[.068,.073,.136],[.11,.059,.079,-.035],[.112,0,0,-.035]],hair,10);
       const arm=-reach*.21,wristUp=sign>0?greeting:0;
@@ -589,7 +532,7 @@ function theatre(canvas,software=false) {
       return destination+(error+carry*dt)*decay;
     }
     const visibleMark=k=>propTravel?.key===k?propTravel.position:s[k];
-    const chairMark=visibleMark('chair'),lampMark=visibleMark('lamp'),angleMark=visibleMark('angle');
+    const chairMark=visual.work?s.chair:visibleMark('chair'),lampMark=visibleMark('lamp'),angleMark=visibleMark('angle');
     const turn=s.stage===3?(angleMark-50)*.006:s.stage===1?(lampMark-50)*.0022:0;
     const lens=[11.4,11.8,10.9,11.35,13.8][s.stage];
     const subject=visual.work?36+s.chair*.24:s.role==='b'?visual.b:visual.a;
