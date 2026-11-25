@@ -56,7 +56,7 @@ function answerBell(index){
   stopCue();stageSound.play(bells[index].tone);
   const correct=index===bellScore[s.chimes];s.chimes=correct?s.chimes+1:0;
   displayScore();
-  if(s.chimes===3){s.chimes=0;changeStage(3);fieldNote('第三声落下，一枚三齿铜签滑入手中。已放入随身装备。');el('action').focus({preventScroll:true});return}
+  if(s.chimes===3){s.chimes=0;changeStage(3);return}
   el('alcoveFeedback').textContent=correct?'梁上的木簧应了一声。已应铃 '+s.chimes+' / 3':'声音散了。铃腹的刻字记着开场和落板的规矩。';
   save();
 }

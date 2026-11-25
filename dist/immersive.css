@@ -90,3 +90,14 @@ html,body{width:100%;height:100%;overflow:hidden;margin:0}
 @media(prefers-reduced-motion:no-preference){.sceneSheet[open]{animation:openCase .15s ease-out}@keyframes openCase{from{opacity:.45;transform:translateY(4px)}to{opacity:1;transform:none}}}
 
 #caseHistory .oldPlaybill{margin:12px 0;padding:10px 13px;background:#383024;color:#f1dfbc;border-inline-start:2px solid #c39960}#caseHistory .oldPlaybill strong{font-weight:600;color:#f2cb91}#caseHistory .oldPlaybill p{line-height:1.55;margin:5px 0}
+#joinBench{margin:8px 0 12px;overflow:hidden;border:1px solid #87734f;border-radius:5px;background:radial-gradient(ellipse at 48% 44%,#50574a,#30372e 80%);touch-action:none}
+#joinBench svg{display:block;width:100%;max-height:150px}
+#joinBench .artifact{fill:none;stroke:#56432c;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+#joinBench .cord{fill:none;stroke-width:5}#joinBench .thread{fill:none;stroke-width:3}
+#joinBench .socket{fill:none;stroke:#f3db99;stroke-width:2;stroke-dasharray:3 3}
+#joinBench[data-joined="false"] .loose{cursor:grab}#joinBench:active .loose{cursor:grabbing}
+#pack .bagRow{flex-wrap:wrap}
+
+#nightVeil{position:fixed;inset:0;z-index:9000;background:#000;opacity:0;pointer-events:none}
+
+.passing-lamp :is(#sceneNav,#sceneColumn>.dialog,#sceneProps,#worldPins,#fieldTouch,#placementTraces){visibility:hidden}

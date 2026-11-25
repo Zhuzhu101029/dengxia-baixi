@@ -84,9 +84,10 @@ function changeItem(slot){
 }
 function combinePieces(){
   const row=s.kit[s.stage],book=evidence[s.stage];
-  if(row.made||selectedPieces.length!==2)return;
+  if(!row||row.made||row.installed||selectedPieces.length!==2)return;
   if(!selectedPieces.includes(0)||!selectedPieces.includes(1)){fieldNote('两件的接头对不上。');stageSound.play('blocked');return}
   row.made=true;selectedPieces=[2];stageSound.play('tick');fieldNote(book.joined);save();markScene();
+  if(evNode('pack').open)evNode('bagSlots').querySelector('[data-slot="2"]')?.focus({preventScroll:true});
 }
 function buttonFor(name,onclick){
   const button=document.createElement('button');button.type='button';button.textContent=name;button.onclick=onclick;return button;
@@ -108,6 +109,7 @@ function syncCase(){
     const icons=etchSets[s.stage];
     diagram.innerHTML=[0,1,2].map((i)=>'<span class="'+((i===2?row.made:row.mask&(1<<i))?'inked':'imprint')+'">'+etchIcon(icons[i])+'</span>').join('');
   }
+  renderAssembly(row);
   if(cluesActive())book.sites.forEach((name,i)=>{
     sites.append(buttonFor(name,()=>startExamine(i)));
     const pin=evNode('worldPins').children[i];
@@ -129,7 +131,8 @@ function syncCase(){
   for(const i of slots){
     const b=buttonFor(i===3?"三齿铜签":book.pieces[i],()=>{
       selectedPieces=selectedPieces.includes(i)?selectedPieces.filter(n=>n!==i):selectedPieces.length===2?[i]:[...selectedPieces,i];
-      fieldNote(selectedPieces.length===2?'两件都已选中，可以试着拼合。':selectedPieces.length?(i===3?'从铃架底下滑出的薄铜签，边缘锉出了三道齿。':i===2?book.joined:book.findings[i]):'已放回装备区。');markScene();
+      const remaining=selectedPieces[0];
+      fieldNote(selectedPieces.length===2?'两件都已选中，可以试着拼合。':selectedPieces.length?(remaining===3?'从铃架底下滑出的薄铜签，边缘锉出了三道齿。':remaining===2?book.joined:book.findings[remaining]):'已放回装备区。');markScene();
       evNode('bagSlots').querySelector('[data-slot="'+i+'"]')?.focus({preventScroll:true});
     });b.insertAdjacentHTML('afterbegin',etchIcon(etchSets[s.stage][i]));b.dataset.slot=i;b.setAttribute('aria-pressed',String(selectedPieces.includes(i)));bag.append(b);
   }

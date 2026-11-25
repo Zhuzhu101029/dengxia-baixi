@@ -52,12 +52,12 @@ function playContact(point,role,ground,done,kind='touch',slot=-1){
       pose.progress=p;pose.transferred=p>=.58;
       pose.pull=kind==='pull'?.12*eased((p-.54)/.18)*pose.reach:0;
       const out=local-action-settle;
-      scrim.style.opacity=String(out>0?.96*eased(out/fade):.96*(1-eased(local/fade)));
+      scrim.style.opacity=String(out>0&&kind!=='latch'?.96*eased(out/fade):.96*(1-eased(local/fade)));
       redrawUntil=now+400;
       if(out>=fade){
         contactRun=null;visual.contact=null;wide=previousWide;
         el('caseArea').inert=false;el('evidenceDetail').inert=false;lockStage(false);
-        done();syncImmersion();revealScene();return;
+        done();syncImmersion();if(!cueLamp.active)revealScene();return;
       }
     }
     run.frame=requestAnimationFrame(frame);

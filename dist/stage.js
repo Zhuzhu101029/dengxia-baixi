@@ -22,9 +22,14 @@ function theatre(canvas,software=false) {
     color=pigment; surface=n; }`);
   compile(gl.FRAGMENT_SHADER,`precision highp float;
     varying mediump vec3 world,material,surface;
-    uniform vec3 roomTint,light,eye,clothOrigin;uniform float timber,printed,illum,cloth,atlasReady;
+    uniform vec3 roomTint,light,eye,clothOrigin,cueSource;uniform float cueIntensity,haloPass;uniform float timber,printed,illum,cloth,atlasReady;
     uniform sampler2D wallPrint,oak,courtyard;
     void main(){
+      if(haloPass>.5){
+        float d=length(world-cueSource);
+        float bloom=.46*exp(-8.*d)+.68*exp(-36.*d);
+        gl_FragColor=vec4(1.,.56,.19,cueIntensity*bloom*(1.-smoothstep(.50,.72,d)));return;
+      }
       vec3 n=normalize(surface), q=world-clothOrigin;
       float timberTone=step(.085, material.r-material.b)*(1.-step(.64,material.r));
       float stone=1.-smoothstep(.055,.14,material.r-material.b);
@@ -63,13 +68,18 @@ function theatre(canvas,software=false) {
       vec2 wall=vec2(abs(world.x)-4.,world.y-4.2);
       float spill=.11/(1.+2.*dot(wall,wall)+1.4*(world.z+2.8)*(world.z+2.8));
       finish=finish*roomTint+vec3(.99,.52,.16)*(pigment+.085)*fire+spill*vec3(1.,.57,.23);
+      vec3 toWick=cueSource-world;float distance2=dot(toWick,toWick);
+      float glow=cueIntensity/(1.+.85*distance2);
+      finish+=glow*(.24+.76*max(0.,dot(n,normalize(toWick+.00001))))*vec3(.90,.47,.14)*(pigment+.12);
+      if(distance2<.05 && material.r>.89 && material.g>.53)
+        finish+=cueIntensity*vec3(.62,.40,.17);
       gl_FragColor=vec4(finish,1.);
     }`);
   gl.linkProgram(program); if(!gl.getProgramParameter(program,gl.LINK_STATUS)) throw Error('着色器连接失败');
   gl.useProgram(program); buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf);
   attributes=['p','n','pigment'].map(name=>gl.getAttribLocation(program,name));
   for(const a of attributes)gl.enableVertexAttribArray(a);
-  un=Object.fromEntries(['eye','right','up','forward','light','aspect','illum','timber','printed','meshOffset','roomTint','cloth','clothOrigin','atlasReady'].map(k=>[k,gl.getUniformLocation(program,k)]));
+  un=Object.fromEntries(['eye','right','up','forward','light','aspect','illum','timber','printed','cueSource','cueIntensity','haloPass','meshOffset','roomTint','cloth','clothOrigin','atlasReady'].map(k=>[k,gl.getUniformLocation(program,k)]));
   gl.uniform1i(gl.getUniformLocation(program,'wallPrint'),0);
   gl.uniform1i(gl.getUniformLocation(program,'oak'),1);
   gl.uniform1i(gl.getUniformLocation(program,'courtyard'),2);
@@ -470,7 +480,9 @@ function theatre(canvas,software=false) {
       }
       if(xy.length<6)continue;
       const ray=sub(light,pt);
-      const lamp=brightness*Math.max(0,dot(n,unit(ray)))*(1/(1+.68*dot(ray,ray)));
+      const cueRay=[cueLamp.x-pt[0],cueLamp.y-pt[1],cueLamp.z-pt[2]];
+      const cueGlow=cueLamp.power*(.24+.76*Math.max(0,dot(n,unit(cueRay))))/(1+.85*dot(cueRay,cueRay));
+      const lamp=brightness*Math.max(0,dot(n,unit(ray)))*(1/(1+.68*dot(ray,ray)))+cueGlow;
       const day=.47*Math.max(0,dot(n,sun));
       const rgb=[.52,.55,.56].map((base,k)=>Math.min(255,Math.round(255*mesh[i+6+k]*(mesh===env.mesh?env.tint[k]:1)*(base+day+lamp*[.89,.55,.23][k]))));
       let uv;
@@ -587,6 +599,12 @@ function theatre(canvas,software=false) {
       }
       eye=target.map((v,i)=>v+back[i]*range);
     }
+    if(cueLamp.focus>0){
+      const f=cueLamp.focus, subject=[cueLamp.x,cueLamp.y+.06,cueLamp.z];
+      const closeEye=[cueLamp.x+.41,cueLamp.y+.15,cueLamp.z+2.7];
+      target=target.map((v,i)=>v+(subject[i]-v)*f);
+      eye=eye.map((v,i)=>v+(closeEye[i]-v)*f);
+    }
     const forward=unit(sub(target,eye)),right=unit(cross(forward,[0,1,0])),up=cross(right,forward);
     const projectTrace=p=>{
       const v=sub(p,eye),d=dot(v,forward);return [.5+1.25*h/w*dot(v,right)/d,.5-1.25*dot(v,up)/d,d];
@@ -608,7 +626,7 @@ function theatre(canvas,software=false) {
     const light=[lx+.42,1.28,lz],brightness=warmth*flicker;
     canvas.parentElement.style.setProperty('--parallax',(50+orbit*18)+'%');
     if(gl){for(const [k,v] of Object.entries({eye,right,up,forward,light}))gl.uniform3fv(un[k],v);
-    gl.uniform3fv(un.roomTint, roomColors[room]);gl.uniform1f(un.aspect,w/h);gl.uniform1f(un.illum,brightness);}
+    gl.uniform3fv(un.roomTint, roomColors[room]);gl.uniform1f(un.aspect,w/h);gl.uniform1f(un.illum,brightness);gl.uniform3f(un.cueSource,cueLamp.x,cueLamp.y,cueLamp.z);gl.uniform1f(un.cueIntensity,cueLamp.power);}
     if(!environments.has(room)){
       data=[];origin=[0,0,0];yaw=0;
       buildRoomShell(room,{box,face,panel,shape,limb,oval});
@@ -809,6 +827,34 @@ function theatre(canvas,software=false) {
       box(gx,1.64-drop,bellZ,.032,.14,.033,'c7a263');
       oval(gx,1.56-drop,bellZ,.055,.056,.05,'e5c283');
     }
+    // Roof rosette, suspension rod, vented cap and lacquered cage carry an exposed oil wick.
+    fixedPiece('cueLantern',0,[cueLamp.x,cueLamp.y,cueLamp.z],()=>{
+      const brass='b2905d',bronze='725439',glaze='925344';
+      shape(0,2.67,0,[[0,.05,.05],[.045,.14,.14],[.09,.16,.16]],bronze,18);
+      bone([0,.49,0],[0,2.70,0],.018,.018,brass);
+      shape(0,.32,0,[[0,.26,.26],[.033,.265,.265],[.075,.13,.13],[.14,.06,.06],[.18,.024,.024]],bronze,16);
+      shape(0,.313,0,[[0,.262,.262],[.017,.265,.265]],brass,16);
+      shape(0,-.32,0,[[0,.058,.058],[.04,.105,.105],[.10,.228,.228],[.14,.236,.236],[.16,.195,.195],[.165,0,0]],glaze,20);
+      shape(0,-.202,0,[[0,.233,.233],[.022,.234,.234]],brass,20);
+      for(let i=0;i<6;i++){
+        const a=(i+.5)*Math.PI/3,x=.209*Math.cos(a),z=.209*Math.sin(a);
+        bone([x,-.18,z],[x*1.12,.32,z*1.12],.012,.014,brass);
+      }
+      // Three back panes transmit the flame; the near panels leave the wick in view.
+      for(let i=3;i<6;i++){
+        const a=i*Math.PI/3,b=(i+1)*Math.PI/3;
+        const at=(r,y,t)=>[r*Math.cos(t),y,r*Math.sin(t)];
+        face(at(.204,-.164,a),at(.204,-.164,b),at(.229,.301,b),at(.229,.301,a),'df9c58');
+      }
+      shape(0,-.17,0,[[0,.062,.062],[.035,.085,.085],[.09,.07,.07],[.104,.021,.021]],bronze,16);
+      bone([0,-.07,0],[0,-.036,0],.012,.009,'3b2b22');
+    });
+    if(cueLamp.power>.008){
+      const f=cueLamp.power, sway=reduced?0:.012*Math.sin(t*4.1)*f;
+      const flameY=cueLamp.y-.041;
+      shape(cueLamp.x,flameY,cueLamp.z,[[0,.009,.009],[.042*f,.049*f,.034*f],[.104*f,.032*f,.025*f,sway],[.208*f,.001,.001,sway*1.9]],'f5a44d',16);
+      shape(cueLamp.x,flameY+.003,cueLamp.z+.019*f,[[0,.006,.006],[.033*f,.027*f,.022*f],[.116*f,.001,.001,sway]],'fff1a5',16);
+    }
     const costumes=[];
     // The apprentice walks downstage, the furniture sits midstage and the puppet walks on the raised rear deck.
     for(const k of ['a','b']){
@@ -850,6 +896,16 @@ function theatre(canvas,software=false) {
       gl.uniform1f(un.cloth,1);gl.uniform3fv(un.clothOrigin,costume.origin);
       gl.drawArrays(gl.TRIANGLES,costume.first,(costumes[i+1]?.first??data.length/9)-costume.first);
     }
+    if(cueLamp.power>.01){
+      const center=[cueLamp.x,cueLamp.y,cueLamp.z];
+      const corner=(x,y)=>center.map((v,i)=>v+.72*(right[i]*x+up[i]*y)-.04*forward[i]);
+      data=[];face(corner(-1,-1),corner(1,-1),corner(1,1),corner(-1,1),'fff1a5');
+      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);
+      gl.uniform1f(un.haloPass,1);gl.depthMask(false);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+      gl.drawArrays(gl.TRIANGLES,0,6);
+      gl.disable(gl.BLEND);gl.depthMask(true);gl.uniform1f(un.haloPass,0);
+    }
+
   }
 }
 
