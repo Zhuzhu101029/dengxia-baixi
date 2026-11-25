@@ -13,10 +13,14 @@ function lamplightCurve(keys,t){
 }
 const wickOut=[[0,1],[.30,.44],[.5,.78],[1,0]];
 const wickIn=[[0,0],[.22,.68],[.38,.46],[.67,.94],[1,1]];
+function ambientWick(now){
+  return (1+Math.sin(now*.00102+.6*Math.sin(now*.00043)))*.5;
+}
 function beginLampPassage(destination){
   if(handoff)return;
   stopMovement();stopCue();s.passage=destination;save();
-  handoff={destination,start:performance.now(),switched:false,lit:false};
+  handoff={destination,start:performance.now(),initialPower:cueLamp.power,initialShade:Number(nightVeil.style.opacity),switched:false,lit:false};
+  if(s.alcove&&!wide){wide=true;syncImmersion()}
   cueLamp.active=true;document.body.classList.add('passing-lamp');
   document.querySelector('main').inert=true;
   nightVeil.style.pointerEvents='auto';
@@ -25,13 +29,14 @@ function beginLampPassage(destination){
 function lightFrame(now){
   let shade=0;
   if(handoff){
-    const fadeOut=reduced?320:1240,hold=reduced?160:400,fadeIn=reduced?460:1700;
+    const fadeOut=reduced?320:2450,hold=reduced?160:850,fadeIn=reduced?460:3600;
     const elapsed=Math.max(0,now-handoff.start);
     if(elapsed<fadeOut){
       const t=elapsed/fadeOut;
-      cueLamp.power=reduced?1-t:lamplightCurve(wickOut,t);
+      const wick=reduced?1-t:lamplightCurve(wickOut,t);
+      cueLamp.power=handoff.initialPower*wick;
       cueLamp.focus=reduced?0:.48*t*t*(3-2*t);
-      shade=1-cueLamp.power;
+      shade=1-(1-handoff.initialShade)*wick;
     }else if(!handoff.switched){
       // Keep at least one complete black frame either side of the actual scene change.
       cueLamp.power=0;cueLamp.focus=reduced?0:1;shade=1;
@@ -42,10 +47,12 @@ function lightFrame(now){
       }
     }else{
       const t=Math.min(1,(now-handoff.arrived)/fadeIn);
-      cueLamp.power=reduced?t:lamplightCurve(wickIn,t);
-      const pullback=Math.max(0,(t-.32)/.68);
+      const wick=reduced?t:lamplightCurve(wickIn,t);
+      const wave=ambientWick(now);
+      cueLamp.power=wick*(reduced?1:.75+.25*wave);
+      const pullback=Math.max(0,(t-.23)/.77);
       cueLamp.focus=reduced?0:1-pullback*pullback*(3-2*pullback);
-      shade=(1-cueLamp.power)*.95+.05*(1-t);
+      shade=(1-wick)*.95+.05*(1-t)+(reduced?0:wick*.17*(1-wave));
       if(!handoff.lit&&t>.06){handoff.lit=true;stageSound.play('lamp')}
       if(t===1){
         const n=handoff.destination;handoff=null;cueLamp.active=false;document.body.classList.remove('passing-lamp');
@@ -57,7 +64,7 @@ function lightFrame(now){
     }
     redrawUntil=Math.max(redrawUntil,now+120);
   }else if(playing&&s.stage>0){
-    const wave=(1+Math.sin(now*.0018+.6*Math.sin(now*.00071)))*.5;
+    const wave=ambientWick(now);
     cueLamp.power=reduced?1:.75+.25*wave;
     shade=reduced?0:.17*(1-wave);
   }else{cueLamp.power=0;cueLamp.focus=0}

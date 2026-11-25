@@ -24,6 +24,7 @@
     let width=1,height=1,scale=1,faces=[],frame=0,swing=0,rotation=-0.27,lookDrag=null;
     const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
     let targetYaw=rotation,zoom=1,targetZoom=1,drawer=0,drawerOpen=false,lastDraw=0;
+    let inspectionTurn=null;
     const clues=[
       '匣背贴着半张旧戏单。写到“小生过桥”，往后的纸叫人反复摸过，毛了边。',
       '匣底摹着一道椅影。桥头画了只椅脚，桥尾是一盏灯，再往东，有人添了个很小的铃。',
@@ -45,6 +46,7 @@
     function inspectRear(){
       if(!playing||!allowed('drawer'))return;
       const toRear=Math.cos(targetYaw)>0;
+      inspectionTurn=reduced?null:{fromYaw:rotation,fromZoom:zoom,start:performance.now()};
       const goal=toRear?Math.PI-.16:-.27;
       targetYaw+=Math.atan2(Math.sin(goal-targetYaw),Math.cos(goal-targetYaw));
       targetZoom=toRear?1.18:1;
@@ -249,7 +251,14 @@
       frame=0;
       const dt=Math.min(.05,(now-lastDraw)/1000||.016);lastDraw=now;
       const k=reduced?1:1-Math.exp(-dt*14);
-      rotation+=(targetYaw-rotation)*k;zoom+=(targetZoom-zoom)*k;
+      if(inspectionTurn){
+        const t=Math.max(0,Math.min(1,(now-inspectionTurn.start)/1550)),ease=t*t*(3-2*t);
+        rotation=inspectionTurn.fromYaw+(targetYaw-inspectionTurn.fromYaw)*ease;
+        zoom=inspectionTurn.fromZoom+(targetZoom-inspectionTurn.fromZoom)*ease;
+        if(t===1)inspectionTurn=null;
+      }else{
+        rotation+=(targetYaw-rotation)*k;zoom+=(targetZoom-zoom)*k;
+      }
       const drawerGoal=drag?.id==='drawer'?drag.goal:Number(drawerOpen);
       drawer+=Math.sign(drawerGoal-drawer)*Math.min(Math.abs(drawerGoal-drawer),dt*2.8);
       if(!ctx||!width||!height)return;
@@ -355,7 +364,7 @@
       }
       const inspect=document.getElementById('inspect');
       inspect.textContent=Math.cos(targetYaw)<0?'查看正面':'查看匣背';
-      if(Math.abs(targetYaw-rotation)>.001||Math.abs(zoom-targetZoom)>.001||Math.abs(drawerGoal-drawer)>.00001)schedule();
+      if(inspectionTurn||Math.abs(targetYaw-rotation)>.001||Math.abs(zoom-targetZoom)>.001||Math.abs(drawerGoal-drawer)>.00001)schedule();
       placeControls();if(actionTimer!==null&&!reduced)schedule();
       if(swing>.01){swing=Math.max(0,swing-dt*1.92);schedule()}
     }
@@ -453,7 +462,7 @@
       const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
       const nearest=points.map(p=>[p,Math.hypot(x-p.pt[0],y-p.pt[1])]).sort((a,b)=>a[1]-b[1])[0];
       if(nearest&&nearest[1]<Math.max(22,scale*(stage===3?.75:.66)))start(nearest[0].id,e);
-      else {lookDrag={id:e.pointerId,x:e.clientX,rotation:targetYaw};canvas.setPointerCapture(e.pointerId)}
+      else {inspectionTurn=null;targetYaw=rotation;lookDrag={id:e.pointerId,x:e.clientX,rotation};canvas.setPointerCapture(e.pointerId)}
     };
     canvas.onpointermove=e=>{
       if(lookDrag?.id===e.pointerId){targetYaw=lookDrag.rotation+(e.clientX-lookDrag.x)*.009;schedule()}
@@ -474,7 +483,7 @@
       signature=sig;
       if(stage!==next||role!==state.role||!active)abortAction();
       role=state.role;
-      if(stage!==next){rotation=targetYaw=-.27;zoom=targetZoom=1;drawer=0;drawerOpen=false;swing=0}
+      if(stage!==next){inspectionTurn=null;rotation=targetYaw=-.27;zoom=targetZoom=1;drawer=0;drawerOpen=false;swing=0}
       stage=next;values={chair:state.chair,lamp:state.lamp,angle:state.angle};playing=active;
       scale=Math.min(width/(stage===1?6.5:5.7),height/4.65);schedule();
     },destroy(){abortAction();window.removeEventListener('blur',abortAction);host.removeEventListener('lostpointercapture',lostCapture);observer.disconnect();cancelAnimationFrame(frame);canvas.remove();for(const b of controls.values())b.remove()}};

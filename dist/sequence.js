@@ -33,7 +33,7 @@ function inspectFace(role){
   el('otherFace').textContent=role==='a'?'看拾影':'看阿照';paintBeat('portrait',0,role);
   el('leaveBeat').focus({preventScroll:true});
 }
-el('portrait').onclick=()=>inspectFace(s.role);
+el('portrait').onclick=()=>dissolve(()=>inspectFace(s.role));
 el('otherFace').onclick=()=>dissolve(()=>inspectFace(portraitRole==='a'?'b':'a'));
 el('carry').onclick=()=>playContact(stageProp('chair'),'a',0,()=>{
   openBeat('chair');

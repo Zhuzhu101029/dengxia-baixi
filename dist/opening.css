@@ -19,9 +19,9 @@
 .foreword-title {position:absolute; bottom:9%; left:8%; color:#fff0cf; letter-spacing:.14em; opacity:0; text-shadow:0 2px 6px #1a140f; pointer-events:none}
 .foreword-title small {display:block; font-size:clamp(13px,1.3vw,20px); margin-bottom:.4em}
 .foreword-title strong {font-weight:500; font-size:clamp(32px,5vw,75px)}
-#foreword.entering .foreword-page {opacity:0;transition:opacity .3s}
-#foreword.entering::before,#foreword.entering .foreword-title {opacity:1; transition:opacity .8s ease}
-#foreword.departing {opacity:0; transition:opacity .7s ease-in-out}
+#foreword.entering .foreword-page {opacity:0;transition:opacity .65s}
+#foreword.entering::before,#foreword.entering .foreword-title {opacity:1; transition:opacity 1.3s ease-in-out}
+#foreword.departing {opacity:0; transition:opacity 1.1s ease-in-out}
 .foreword-reader {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 @media(max-height:460px) {
   #foreword-lines {font-size:clamp(16px,3.6vh,19px);line-height:1.6}

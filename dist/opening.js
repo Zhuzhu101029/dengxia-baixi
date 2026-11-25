@@ -59,8 +59,8 @@ function enterFromForeword() {
     setTimeout(() => {
       foreword.hidden = true;
       if (s.stage === 4) el('start').focus({preventScroll:true});
-    }, brief ? 0 : 720);
-  }, brief ? 0 : 1500);
+    }, brief ? 0 : 1120);
+  }, brief ? 0 : 1950);
 }
 foreword.addEventListener('click', enterFromForeword);
 window.addEventListener('keydown', event => {

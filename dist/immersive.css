@@ -101,3 +101,9 @@ html,body{width:100%;height:100%;overflow:hidden;margin:0}
 #nightVeil{position:fixed;inset:0;z-index:9000;background:#000;opacity:0;pointer-events:none}
 
 .passing-lamp :is(#sceneNav,#sceneColumn>.dialog,#sceneProps,#worldPins,#fieldTouch,#placementTraces){visibility:hidden}
+
+@media(prefers-reduced-motion:no-preference){
+  .passing-lamp .stage.in-alcove>#stage3d{display:block;position:absolute;inset:0}
+  .passing-lamp .stage.in-alcove>#alcove{position:absolute;inset:0;animation:leaveBellRoom 1.15s ease-in-out both}
+  @keyframes leaveBellRoom{from{opacity:1}to{opacity:0}}
+}

@@ -5,7 +5,7 @@ function dissolve(next){
   if(pendingCut||contactRun)return;
   const veil=el('shutter');
   veil.getAnimations().forEach(a=>a.cancel());
-  const fade=veil.animate([{opacity:0},{opacity:.96}],{duration:reduced?70:180,easing:'ease-in-out',fill:'forwards'});
+  const fade=veil.animate([{opacity:0},{opacity:.96}],{duration:reduced?70:520,easing:'ease-in-out',fill:'forwards'});
   pendingCut=fade;
   fade.onfinish=()=>{
     if(pendingCut!==fade)return;
@@ -22,7 +22,7 @@ function cancelContact(){
 }
 function revealScene(){
   const scrim=el('shutter');scrim.style.opacity='';
-  scrim.animate?.([{opacity:.96},{opacity:0}],{duration:reduced?90:340,easing:'ease-out'});
+  scrim.animate?.([{opacity:.96},{opacity:0}],{duration:reduced?90:880,easing:'ease-in-out'});
 }
 function playContact(point,role,ground,done,kind='touch',slot=-1){
   if(pendingCut||contactRun||!playing||!inReach(point,role))return;
@@ -33,7 +33,7 @@ function playContact(point,role,ground,done,kind='touch',slot=-1){
   if(rect.top>innerHeight*.42||rect.top+Math.min(rect.height,480)<innerHeight*.35){
     el('stage3d').parentElement.scrollIntoView({behavior:reduced?'instant':'smooth',block:'start'});
   }
-  const fade=reduced?75:190, action=reduced?640:1520, settle=reduced?50:160;
+  const fade=reduced?75:460, action=reduced?640:1520, settle=reduced?50:330;
   let elapsed=0,last=0,started=false;
   const pose={point,role,ground,kind,slot,chapter:s.stage,step:0,reach:0,pull:0,transferred:false};
   lockStage(true);el('caseArea').inert=true;el('evidenceDetail').inert=true;

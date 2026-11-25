@@ -548,11 +548,11 @@ function theatre(canvas,software=false) {
     const turn=s.stage===3?(angleMark-50)*.006:s.stage===1?(lampMark-50)*.0022:0;
     const lens=[11.4,11.8,10.9,11.35,13.8][s.stage];
     const subject=visual.work?36+s.chair*.24:s.role==='b'?visual.b:visual.a;
-    orbit=track(orbit,(s.role==='b'?.115:-.11)+turn+visual.look,0,3.4);
-    focus=track(focus,s.role==='b'? .18:0,1,3.8);
+    orbit=track(orbit,(s.role==='b'?.115:-.11)+turn+visual.look,0,2.45);
+    focus=track(focus,s.role==='b'? .18:0,1,2.7);
     aim=track(aim,s.stage===4?0:wx(subject)*(w/h<1.25?.92:.38),2,3.6);
-    camHeight=track(camHeight,s.stage===4?2.85:s.role==='b'?2.75:2.45,3,3.3);
-    camRadius=track(camRadius,visual.work?6.7:s.stage===4?13.8:!visual.started?14.6:lens+(s.role==='b'?-.4:0),4,3.2);
+    camHeight=track(camHeight,s.stage===4?2.85:s.role==='b'?2.75:2.45,3,2.5);
+    camRadius=track(camRadius,visual.work?6.7:s.stage===4?13.8:!visual.started?14.6:lens+(s.role==='b'?-.4:0),4,2.3);
     const shot=visual.shot, work=visual.work;
     const room=s.stage<2?'shop':s.stage===2?'river':'opera';
     const cx=room==='river'?-3.9:room==='opera'?-1.1:wx(36+chairMark*.24);
