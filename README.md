@@ -8,6 +8,12 @@
 
 [下载最新电脑版单文件](https://github.com/Zhuzhu101029/dengxia-baixi/raw/refs/heads/main/dist/desktop.html)。建议在电脑上用 Chrome 打开下载好的 HTML。三关、图片、音效和序章书法均随文件提供，下载后可以断网游玩，无需安装或解压。等黑屏序章的最后一句写完，点击画面入戏。
 
+## 影戏馆与角色模型
+
+[下载可编辑的 Blender 工程](art/shadow-theatre.blend) · [查看游戏实景](art/gallery.jpg) · [查看双人定妆](art/cast.png)
+
+工程在 Blender 5.3 中制作，打开后可查看双人定妆渲染。切换到「影戏馆建模」可编辑角色、查看 48 帧行走动作。三关的器具分别收在各自的场景集合中，戏妆、云锦和后厅灯幕均随工程打包。
+
 ## 游玩说明
 
 | 操作 | 按键或手势 |
