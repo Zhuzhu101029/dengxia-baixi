@@ -4,6 +4,8 @@
 
 ## 下载与开始
 
+**[▶ 点击直接游玩电脑版](https://zhuzhu101029.github.io/dengxia-baixi/dist/desktop.html)**
+
 [下载最新电脑版单文件](https://github.com/Zhuzhu101029/dengxia-baixi/raw/refs/heads/main/dist/desktop.html)。建议在电脑上用 Chrome 打开下载好的 HTML。三关、图片、音效和序章书法均随文件提供，下载后可以断网游玩，无需安装或解压。等黑屏序章的最后一句写完，点击画面入戏。
 
 ## 游玩说明
